@@ -84,24 +84,67 @@ int main(int argc, char **argv) {
 
 
 	// return 0;
-	MessageDigest::loadMessageDigestAlgorithms();
+	// MessageDigest::loadMessageDigestAlgorithms();
 
-	CertificateBuilder *certBuilder = new CertificateBuilder();
+	// CertificateBuilder *certBuilder = new CertificateBuilder();
+
+	// RSAKeyPair key_pair(2048);
+	// RSAPublicKey *pubKey = (RSAPublicKey*) key_pair.getPublicKey();
+	// RSAPrivateKey *privKey = (RSAPrivateKey*) key_pair.getPrivateKey();
+
+	// certBuilder->setPublicKey(*pubKey);
+	// // certBuilder->includeEcdsaParameters();
+
+	// Certificate *cert = certBuilder->sign(*privKey, MessageDigest::SHA1);
+	// std::string pem = cert->getPemEncoded();
+
+	// std::ofstream certificate_file("certificate_file.pem");
+	// certificate_file << cert->getPemEncoded();
+	// certificate_file.close();
+
+	// if(pem.size() > 0){
+	// 	std::cout << "Pem Criado" << std::endl;
+	// }
+	// if(cert->verify(*pubKey)){
+	// 	std::cout << "Chave correta" << std::endl;
+	// }
+
+		MessageDigest::loadMessageDigestAlgorithms();
 
 	RSAKeyPair key_pair(2048);
-
 	RSAPublicKey *pubKey = (RSAPublicKey*) key_pair.getPublicKey();
 	RSAPrivateKey *privKey = (RSAPrivateKey*) key_pair.getPrivateKey();
 
-	certBuilder->setPublicKey(*pubKey);
-	// certBuilder->includeEcdsaParameters();
+	std::ofstream public_key_file("public_key.pem");
+	public_key_file << pubKey->getPemEncoded();
+	public_key_file.close();
 
-	Certificate *cert = certBuilder->sign(*privKey, MessageDigest::SHA1);
-	std::string pem = cert->getPemEncoded();
+	std::ofstream private_key_file("private_key.pem");
+	private_key_file << privKey->getPemEncoded();
+	private_key_file.close();
+	
+
+	CertificateBuilder certBuilder = CertificateBuilder();
+
+	certBuilder.setVersion(1);
+	certBuilder.setSerialNumber(0);
+	
+	RDNSequence rdnSubject;
+	rdnSubject.addEntry(RDNSequence::COUNTRY, "CO");
+	rdnSubject.addEntry(RDNSequence::ORGANIZATION, "organization");
+	rdnSubject.addEntry(RDNSequence::ORGANIZATION_UNIT, "oUnit");
+	rdnSubject.addEntry(RDNSequence::COMMON_NAME, "common_name");
+	
+	certBuilder.setSubject(rdnSubject);
+	certBuilder.setPublicKey(*pubKey);
+
+	Certificate *cert = certBuilder.sign(*privKey, MessageDigest::SHA1);
 
 	std::ofstream certificate_file("certificate_file.pem");
 	certificate_file << cert->getPemEncoded();
 	certificate_file.close();
+
+	std::string pem = cert->getPemEncoded();
 
 	if(pem.size() > 0){
 		std::cout << "Pem Criado" << std::endl;
@@ -109,6 +152,8 @@ int main(int argc, char **argv) {
 	if(cert->verify(*pubKey)){
 		std::cout << "Chave correta" << std::endl;
 	}
-	
 
+	delete (cert);
+
+	return 0;
 }
