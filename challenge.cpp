@@ -1,131 +1,22 @@
 #include <stdio.h>
 #include <iostream>
 #include <string>
-#include <fstream>
+#include <fstream> 
 #include <libcryptosec/MessageDigest.h>
 #include <libcryptosec/RSAKeyPair.h>
 #include <libcryptosec/certificate/CertificateBuilder.h>
-#include <libcryptosec/certificate/CertificateRequestFactory.h>
-#include <functional>
+#include <libcryptosec/Pkcs12Builder.h>
+#include <sys/stat.h>
 
-
-
-
-int main(int argc, char **argv) {
-	// printf("Hello There!\n");
-	
-	// MessageDigest::loadMessageDigestAlgorithms();
-
-	// RSAKeyPair key_pair(2048);
-	// RSAPublicKey *pubKey = (RSAPublicKey*) key_pair.getPublicKey();
-	// RSAPrivateKey *privKey = (RSAPrivateKey*) key_pair.getPrivateKey();
-
-
-	// std::ofstream public_key_file("public_key.pem");
-	// public_key_file << pubKey->getPemEncoded();
-	// public_key_file.close();
-
-	// std::ofstream private_key_file("private_key.pem");
-	// private_key_file << privKey->getPemEncoded();
-	// private_key_file.close();
-	
-
-	// CertificateBuilder cert = CertificateBuilder();
-	// cert.setVersion(1);
-	// cert.setSerialNumber(0);
-	
-	// RDNSequence rdnSubject;
-	// rdnSubject.addEntry(RDNSequence::COUNTRY, "CO");
-	// rdnSubject.addEntry(RDNSequence::ORGANIZATION, "organization");
-	// rdnSubject.addEntry(RDNSequence::ORGANIZATION_UNIT, "oUnit");
-	// rdnSubject.addEntry(RDNSequence::COMMON_NAME, "common_name");
-	
-	// cert.setSubject(rdnSubject);
-	
-	// cert.setPublicKey(*pubKey);
-
-	// std::ofstream certificate_file("certificate_file.pem");
-	// certificate_file << cert.getPemEncoded();
-	// certificate_file.close();
-
-	// ifstream inFile;
-	// inFile.open("certificate_file.pem");
-	// std::string pem((istreambuf_iterator<char>(inFile)), istreambuf_iterator<char>());
-	// inFile.close();
-
-	// X509 *teste2 =  cert.getX509();
-
-	// Certificate newCert(teste2);
-
-	// std::cout << newCert.getPublicKey()->getPemEncoded() << std::endl;
-	// for (size_t i = 0; i < newCert.getSubject().getEntries().size(); i++)
-	// {
-	// 	std::cout << i << newCert.getSubject().getEntries().at(i).first.getName() << std::endl;
-	// 	std::cout << newCert.getSubject().getEntries().at(i).second << std::endl;
-	// }
-
-	// if(newCert.getPublicKey() == cert.getPublicKey()){
-	// 	std::cout << "Yey 1" << std::endl;
-	// }
-	// else{
-	// 	std::cout << "KillMe 2" << std::endl;
-	// }
-
-	// if(cert.verify(*pubKey)){
-	// 	std::cout << "Yey" << std::endl;
-	// }
-	// else{
-	// 	std::cout << "KillMe" << std::endl;
-	// }
-	// // std::cout << << std::endl;
-	// // std::cout << << std::endl;
-	// // std::cout << << std::endl;
-
-
-
-	// return 0;
-	// MessageDigest::loadMessageDigestAlgorithms();
-
-	// CertificateBuilder *certBuilder = new CertificateBuilder();
-
-	// RSAKeyPair key_pair(2048);
-	// RSAPublicKey *pubKey = (RSAPublicKey*) key_pair.getPublicKey();
-	// RSAPrivateKey *privKey = (RSAPrivateKey*) key_pair.getPrivateKey();
-
-	// certBuilder->setPublicKey(*pubKey);
-	// // certBuilder->includeEcdsaParameters();
-
-	// Certificate *cert = certBuilder->sign(*privKey, MessageDigest::SHA1);
-	// std::string pem = cert->getPemEncoded();
-
-	// std::ofstream certificate_file("certificate_file.pem");
-	// certificate_file << cert->getPemEncoded();
-	// certificate_file.close();
-
-	// if(pem.size() > 0){
-	// 	std::cout << "Pem Criado" << std::endl;
-	// }
-	// if(cert->verify(*pubKey)){
-	// 	std::cout << "Chave correta" << std::endl;
-	// }
-
-		MessageDigest::loadMessageDigestAlgorithms();
+void createKeysAndCertificate(){	
+	MessageDigest::loadMessageDigestAlgorithms();
+	SymmetricCipher::loadSymmetricCiphersAlgorithms();
 
 	RSAKeyPair key_pair(2048);
 	RSAPublicKey *pubKey = (RSAPublicKey*) key_pair.getPublicKey();
 	RSAPrivateKey *privKey = (RSAPrivateKey*) key_pair.getPrivateKey();
-
-	std::ofstream public_key_file("public_key.pem");
-	public_key_file << pubKey->getPemEncoded();
-	public_key_file.close();
-
-	std::ofstream private_key_file("private_key.pem");
-	private_key_file << privKey->getPemEncoded();
-	private_key_file.close();
 	
-
 	CertificateBuilder certBuilder = CertificateBuilder();
-
 	certBuilder.setVersion(1);
 	certBuilder.setSerialNumber(0);
 	
@@ -138,22 +29,42 @@ int main(int argc, char **argv) {
 	certBuilder.setSubject(rdnSubject);
 	certBuilder.setPublicKey(*pubKey);
 
-	Certificate *cert = certBuilder.sign(*privKey, MessageDigest::SHA1);
+	time_t now = time(0);
+	DateTime dateTimeNow(now);
+	DateTime dateTimeExpire(now+60*60*24*365);
 
-	std::ofstream certificate_file("certificate_file.pem");
-	certificate_file << cert->getPemEncoded();
-	certificate_file.close();
+	certBuilder.setNotBefore(dateTimeNow);
+	certBuilder.setNotAfter(dateTimeExpire);
 
-	std::string pem = cert->getPemEncoded();
+	Certificate *cert = certBuilder.sign(*privKey, MessageDigest::SHA256);
 
-	if(pem.size() > 0){
-		std::cout << "Pem Criado" << std::endl;
+	Pkcs12Builder pkcs12Builder = Pkcs12Builder();
+	pkcs12Builder.setKeyAndCertificate(privKey, cert, "Teste");
+	pkcs12Builder.addAdditionalCert(cert);
+	
+	Pkcs12 *pkcs12 = pkcs12Builder.doFinal("202530");
+
+	std::ofstream pkcs12_file("./certificates/certificate.p12");
+	for (size_t i = 0; i < pkcs12->getDerEncoded().size(); i++)
+	{
+		pkcs12_file << pkcs12->getDerEncoded().at(i);
 	}
-	if(cert->verify(*pubKey)){
-		std::cout << "Chave correta" << std::endl;
-	}
+	pkcs12_file.close();
+
 
 	delete (cert);
+}
+
+int main(int argc, char **argv) {
+	MessageDigest::loadMessageDigestAlgorithms();
+	SymmetricCipher::loadSymmetricCiphersAlgorithms();
+
+	struct stat st;
+	if (stat("./certificates", &st) == -1) {
+		mkdir("./certificates", 0700);
+	}
+
+	createKeysAndCertificate();
 
 	return 0;
 }

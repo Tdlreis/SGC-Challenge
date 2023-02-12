@@ -44,6 +44,8 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "functional": "cpp",
-        "iterator": "cpp"
+        "iterator": "cpp",
+        "chrono": "cpp",
+        "ratio": "cpp"
     }
 }
