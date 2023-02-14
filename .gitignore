@@ -1,5 +1,11 @@
 *.pem
 *.o
 *.out
+*.pdf
 /certificates/
 /.vscode
+
+*
+!.gitignore
+!*.cpp
+!Makefile

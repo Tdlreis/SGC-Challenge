@@ -2,10 +2,14 @@
 #include <iostream>
 #include <string>
 #include <fstream> 
+
 #include <libcryptosec/MessageDigest.h>
 #include <libcryptosec/RSAKeyPair.h>
 #include <libcryptosec/certificate/CertificateBuilder.h>
 #include <libcryptosec/Pkcs12Builder.h>
+#include <libcryptosec/Pkcs12Factory.h>
+#include <libcryptosec/Signer.h>
+
 #include <sys/stat.h>
 
 void createKeysAndCertificate(){	
@@ -89,13 +93,16 @@ void createKeysAndCertificate(){
 
 
 	delete (cert);
+	delete (pubKey);
+	delete (privKey);
+	delete (pkcs12);
 }
 
 void signDocument(){
 	MessageDigest::loadMessageDigestAlgorithms();
 	SymmetricCipher::loadSymmetricCiphersAlgorithms();
 
-	ifstream file("CURRICULO_ENGENHARIA_DE_COMPUTAÇÃO_[CAMPUS_ARARANGUÁ]_20201.pdf.PDF", ios::binary);
+	ifstream file("CURRICULO_ENGENHARIA_DE_COMPUTAÇÃO_[CAMPUS_ARARANGUÁ]_20201.pdf", ios::binary);
 
 	// Get the length of the file
     file.seekg(0, file.end);
@@ -113,11 +120,31 @@ void signDocument(){
 	MessageDigest teste(MessageDigest::SHA256);
 	ByteArray b(buffer, length);
 	delete[] buffer;
-	ByteArray hex = teste.doFinal(b);
+	ByteArray hash = teste.doFinal(b);
+
+	ifstream file2("./certificates/teste_teste.p12", ios::binary);
+
+	// Get the length of the file2
+    file2.seekg(0, file2.end);
+    length = file2.tellg();
+    file2.seekg(0, file2.beg);
+
+    // Read the contents of the file2 into a buffer2
+    unsigned char* buffer2 = new unsigned char[length];
+    file2.read ((char*)buffer2, length);
+	file2.close();
+	ByteArray c(buffer2, length);
+	delete[] buffer2;
+
+	Pkcs12 p12 = *Pkcs12Factory().fromDerEncoded(c);
 
 
-	cout << hex.toHex() << endl;
+	Signer sig;
+	ByteArray signiture = sig.sign(*p12.getPrivKey("teste"), hash, MessageDigest::SHA256);
+
+	cout << signiture.toHex() << endl;
 }
+
 
 int main(int argc, char **argv) {
 	MessageDigest::loadMessageDigestAlgorithms();
@@ -128,6 +155,7 @@ int main(int argc, char **argv) {
 		mkdir("./certificates", 0700);
 	}
 
+	// createKeysAndCertificate();
 	signDocument();
 
 	// while (true)
