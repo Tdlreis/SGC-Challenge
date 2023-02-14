@@ -91,6 +91,34 @@ void createKeysAndCertificate(){
 	delete (cert);
 }
 
+void signDocument(){
+	MessageDigest::loadMessageDigestAlgorithms();
+	SymmetricCipher::loadSymmetricCiphersAlgorithms();
+
+	ifstream file("CURRICULO_ENGENHARIA_DE_COMPUTAÇÃO_[CAMPUS_ARARANGUÁ]_20201.pdf.PDF", ios::binary);
+
+	// Get the length of the file
+    file.seekg(0, file.end);
+    int length = file.tellg();
+    file.seekg(0, file.beg);
+
+    // Read the contents of the file into a buffer
+    unsigned char* buffer = new unsigned char[length];
+    file.read ((char*)buffer, length);
+	file.close();
+
+	// string pdf = buffer;
+
+
+	MessageDigest teste(MessageDigest::SHA256);
+	ByteArray b(buffer, length);
+	delete[] buffer;
+	ByteArray hex = teste.doFinal(b);
+
+
+	cout << hex.toHex() << endl;
+}
+
 int main(int argc, char **argv) {
 	MessageDigest::loadMessageDigestAlgorithms();
 	SymmetricCipher::loadSymmetricCiphersAlgorithms();
@@ -100,7 +128,36 @@ int main(int argc, char **argv) {
 		mkdir("./certificates", 0700);
 	}
 
-	createKeysAndCertificate();
+	signDocument();
+
+	// while (true)
+	// {
+	// 	cout << "Functions: " << endl;
+	// 	cout << "1-Create Certificate" << endl;
+	// 	cout << "2-Import p12 file" << endl;
+	// 	cout << "3-Include Document" << endl;
+	// 	cout << "4-Sign Document" << endl;
+	// 	cout << "Type function number ->";
+	// 	string in;
+	// 	cin >> in;
+
+
+	// 	if(in == "1"){
+	// 		createKeysAndCertificate();
+	// 	}
+	// 	else if(in == "2"){
+
+	// 	}
+	// 	else if(in == "3"){
+
+	// 	}
+	// 	else if(in == "4"){
+	// 		signDocument();
+	// 	}
+	// 	else{
+	// 		cout << "Type function number ->";
+	// 	}
+	// }
 
 	return 0;
 }
