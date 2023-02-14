@@ -2,6 +2,8 @@
 #include <iostream>
 #include <string>
 #include <fstream> 
+#include <vector>
+#include <sstream>
 
 #include <libcryptosec/MessageDigest.h>
 #include <libcryptosec/RSAKeyPair.h>
@@ -9,8 +11,10 @@
 #include <libcryptosec/Pkcs12Builder.h>
 #include <libcryptosec/Pkcs12Factory.h>
 #include <libcryptosec/Signer.h>
+#include <libcryptosec/Pkcs7SignedDataBuilder.h>
 
 #include <sys/stat.h>
+
 
 void createKeysAndCertificate(){	
 	MessageDigest::loadMessageDigestAlgorithms();
@@ -101,8 +105,19 @@ void createKeysAndCertificate(){
 void signDocument(){
 	MessageDigest::loadMessageDigestAlgorithms();
 	SymmetricCipher::loadSymmetricCiphersAlgorithms();
+	
+	cout << "File Path: ";
+	string in;
+	getline(cin, in);
 
-	ifstream file("CURRICULO_ENGENHARIA_DE_COMPUTAÇÃO_[CAMPUS_ARARANGUÁ]_20201.pdf", ios::binary);
+	string path = in;
+	
+
+	ifstream file(in.c_str(), ios::binary);
+	if(!file){
+		cout << "File not found" << endl;
+		return;
+	}
 
 	// Get the length of the file
     file.seekg(0, file.end);
@@ -114,15 +129,29 @@ void signDocument(){
     file.read ((char*)buffer, length);
 	file.close();
 
-	// string pdf = buffer;
-
 
 	MessageDigest teste(MessageDigest::SHA256);
 	ByteArray b(buffer, length);
 	delete[] buffer;
 	ByteArray hash = teste.doFinal(b);
 
-	ifstream file2("./certificates/teste_teste.p12", ios::binary);
+	cout << "Signer complete name: ";
+	getline(cin, in);
+
+	for (size_t i = 0; i < in.size(); i++)
+	{
+		in.at(i) = tolower(in.at(i));
+		if (in.at(i) == ' ')
+		{
+			in.at(i) = '_';
+		}
+	}
+
+	ifstream file2(string("./certificates/" + in + ".p12").c_str(), ios::binary);
+	if(!file2){
+		cout << "Certificate not found!" << endl << "Please check your speel or create certificate" << endl;
+		return;
+	}
 
 	// Get the length of the file2
     file2.seekg(0, file2.end);
@@ -138,13 +167,80 @@ void signDocument(){
 
 	Pkcs12 p12 = *Pkcs12Factory().fromDerEncoded(c);
 
+	cout << "Signer password: ";
+	getline(cin, in);
 
 	Signer sig;
-	ByteArray signiture = sig.sign(*p12.getPrivKey("teste"), hash, MessageDigest::SHA256);
+	ByteArray signiture;
+	try{
+		signiture = sig.sign(*p12.getPrivKey(in), hash, MessageDigest::SHA256);
+	}
+	catch(Pkcs12Exception){
+		cout << "Incorrect Password" << endl;
+	}
+	if(uncaught_exception()){
+		cout << signiture.toHex() << endl;	
+	}
 
-	cout << signiture.toHex() << endl;
+	cout << endl<< "Do you: " << endl;
+	cout << "1-Agree: " << endl;
+	cout << "2-Disagree: " << endl;
+	cout << "0-Quit: " << endl;
+	getline(cin, in);
+	bool accept;
+
+	
+
+	if (in == "1")
+	{
+		accept = true;
+	}
+	else if(in == "2"){
+		accept = false;
+	}
+	else if(in == "0"){
+		cout << "Ok, think about it" << endl;
+	}
+	else{
+		cout << "Not an option, please choose a number" << endl;
+	}
+	
+	ostringstream  out;
+	out << "Decision:" << endl << accept << endl;
+	cout << out.str() << endl;
+	out << "Signature: " << endl << signiture.toString();
+
+	cout << out.str() << endl;
+
+	ByteArray outf(&out);
+	
+	int pos = path.find_last_of("/");
+	string fileName = path.substr(pos+1);
+	pos = fileName.find_last_of(".");
+	fileName.erase(pos, fileName.size());
+
+	ofstream out_file;
+	out_file.open(string(path+".txt").c_str());
+	out_file << out;
+	out_file.close();
+
 }
 
+void creatingMemoryFile(){
+
+}
+
+void updateMemoryFile(){
+
+}
+
+void openMemoryFile(){
+
+}
+
+void includeDocument(){
+
+}
 
 int main(int argc, char **argv) {
 	MessageDigest::loadMessageDigestAlgorithms();
@@ -154,9 +250,9 @@ int main(int argc, char **argv) {
 	if (stat("./certificates", &st) == -1) {
 		mkdir("./certificates", 0700);
 	}
-
-	// createKeysAndCertificate();
-	signDocument();
+	if (stat("./documents", &st) == -1) {
+		mkdir("./documents", 0700);
+	}
 
 	// while (true)
 	// {
@@ -165,6 +261,7 @@ int main(int argc, char **argv) {
 	// 	cout << "2-Import p12 file" << endl;
 	// 	cout << "3-Include Document" << endl;
 	// 	cout << "4-Sign Document" << endl;
+	// 	cout << "5-Verify Document" << endl;
 	// 	cout << "Type function number ->";
 	// 	string in;
 	// 	cin >> in;
@@ -180,6 +277,9 @@ int main(int argc, char **argv) {
 
 	// 	}
 	// 	else if(in == "4"){
+	// 		signDocument();
+	// 	}
+	// 	else if(in == "5"){
 	// 		signDocument();
 	// 	}
 	// 	else{
