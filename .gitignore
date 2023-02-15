@@ -8,4 +8,5 @@
 *
 !.gitignore
 !*.cpp
+!*.h
 !Makefile
