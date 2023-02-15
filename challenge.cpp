@@ -13,8 +13,48 @@
 #include <libcryptosec/Pkcs12Factory.h>
 #include <libcryptosec/Signer.h>
 #include <libcryptosec/Pkcs7SignedDataBuilder.h>
+#include <libcryptosec/AsymmetricCipher.h>
 
 #include <sys/stat.h>
+
+string pemPub = "-----BEGIN PUBLIC KEY-----" "\n"
+				"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxA3ipLf2DHVxiJ2zVnvR" "\n"
+				"XsrVDKNjjp9orDsIzXSxi1Q4SoKjx/+s6C+2elHM7KEutoWINn8U/0t9ZvTk6S3G" "\n"
+				"MPLpdpLefWuwvT2lxP5sNSLYcsQdJ34A8T79HLudzPkWj/psru5pcWZaD1YNeNZM" "\n"
+				"0ehiBweqPcOZ6MNu5mkcF156zgnJkTAdlwUjf5yBIeIQMg+MiumGiYfwa83ja0jK" "\n"
+				"f5misoLF/fuCman9nvX4mjyRuxQq8Gs/DYC+B3ywJrEVsG5p1tsTy0RmLgccILW/" "\n"
+				"wvm4RFXDrv2akLLxwQPNk3FHiUKCQH6cIf+V9WsdxUh39noVs6RnMkAEOshQRbQ+" "\n"
+				"KwIDAQAB" "\n"
+				"-----END PUBLIC KEY-----" "\n";
+RSAPublicKey sysPubKey(pemPub);
+string pemPriv = "-----BEGIN RSA PRIVATE KEY-----" "\n"
+				"MIIEpAIBAAKCAQEArvD+/OxAsAls+rBzeMhwiuWl3jt1M6CHd6W4vFZ4spHIrIPG" "\n"
+				"hvLUNhma18um5Kf0YHO6JEjWjRTrxiCy8UEOJyiavf9YE6MG9wNHW5wZiC0tUb1u" "\n"
+				"D6I045O8H3rMSrwiVlrankuQWayTAOq3x0sggkVGKbicFD+T2C3iQ274QDWeElut" "\n"
+				"UfqqFjJhwz/atpmo82ZF6U0iIpd2evXX/BNJOZYRuF0uXA6PwqoSbhaXib0RdGEn" "\n"
+				"bVuIhHCMLlV4WdicqGlcip/77g1u8OyRdedNSSNCGWMC9+VH6Nf82TbkkPHFO0K+" "\n"
+				"53mJVq4GB7OHKDPM5zIEEuFMf8h2Ip1Yl1svNQIDAQABAoIBAHmcQkWkHhvBkaZ7" "\n"
+				"Puo5vDJyDen8vy6Sa1l7NH6IRgMsYKm8OSfaajbpecCFa5EMSE88Y6uRjsQoRPZI" "\n"
+				"CNy48pO6IEfv11RfQho4h0RhsUX+0cA+xOHNSqLhMidX/+f7/Iq3Qb5EnSYZV1+N" "\n"
+				"yw+ZZBHrAilCkg1pXOcsjlt+KsjG1phfgAzNmcAhOOho4EhpvZbw1QITVRBqXqSI" "\n"
+				"pfpDMMBGesX77LBha2fpgGBDArlG8aSmOik8asZB7iiRDJFZE1lydhzAc5MWAyJh" "\n"
+				"V8oBHbokuGFlCZHq/CDGsrb576iLCir7sLPzTybsjjbBaoukYb6tb1KZtxIKC5pq" "\n"
+				"llBdnwkCgYEA2+iYrX/jOCDS7/b2ySs9ekSuTbgywazcXPqm3CeyktHfARc1gRHt" "\n"
+				"FCCwz/ATlss6ebMBCNT5prEs7lvHA62FKlJk9QZp/tJ3Zuz0AA4XAtlum1MlZ9Ec" "\n"
+				"fBtQs6efi/kxB2HA3KnbB/9kdZVCdHW0nPCRPK6AeCKCtrHtczO18AcCgYEAy6cd" "\n"
+				"UfMIijZnc6HFjXl1B84SSwCsvVXrBolzCKAC7BU0+W5JNWV5J7JarDmBeXz4Mpyj" "\n"
+				"RpiGc69XmJgFHam+Pc3/6VX77d79pfglPWEnyIv9gdgir0NN6joCH+2Vdzb8dWU5" "\n"
+				"Zc+YToIeXlx74IjDa1R8Fd6rPbE0uT7GtLi1n+MCgYEAzcufTga3iihVntG8Y8h+" "\n"
+				"cPTjNcJiZZMyaiT7kF3qJLIZAvlITfCLsGFjdkUS3/RyVb+qASzmMRPvm2TyGsQB" "\n"
+				"MfkHl7IX8avep8iqE38cE8ONWfh2sfAkuxQI8we0LJbYRjM5/IdMffCIf+1d0oTw" "\n"
+				"sEoFcQdRHJwXPYfHUh8bbXMCgYEApxTMMVe7QemwpmWqto9XPLgMugwrrIq47/wE" "\n"
+				"rKbavuYHOD0LQwulgrQJQBNN7mZhGuT38AtjA7Zvn3nZeKSyt/IyazVoI5g3cdtM" "\n"
+				"cjcrdJWlvsmcaz5Exk4hQCCj59Ls/UO2+5h91KtcTv6Bg42xBnWh+C9fPpYMM48V" "\n"
+				"Z1/DYxECgYBFEKeIeYCiurwPYeI2z6Rh2joxyg5HFuV7yN/LsH8niqmTaAaKJ2BA" "\n"
+				"pv73f8LgIIAtYAkQsjoRBIVcVxvXBbrbY4ziqTbYdlLTyRK9K7zWP8g2vX7b5F/v" "\n"
+				"TXf2csdG9XxDuUJCI9jWY+l0soZAdkkYhGxCnXZt57h8rjWgXsbbPQ==" "\n"
+				"-----END RSA PRIVATE KEY-----" "\n";
+RSAPrivateKey sysPrivKey(pemPriv);
 
 
 void createKeysAndCertificate(){	
@@ -60,6 +100,9 @@ void createKeysAndCertificate(){
 	certBuilder.setPublicKey(*pubKey);
 
 	time_t now = time(0);
+	setenv("TZ", "America/Sao_Paulo", 1);
+	struct tm* t = localtime(&now);
+
 	DateTime dateTimeNow(now);
 	DateTime dateTimeExpire(now+60*60*24*365);
 
@@ -227,16 +270,12 @@ void signDocument(){
 
 }
 
-void creatingMemoryFile(ByteArray out){
-	return;
-}
-
-void updateMemoryFile(){
-
-}
-
-void openMemoryFile(){
-
+string getFileName(string path){
+	int pos = path.find_last_of("/");
+	string fileName = path.substr(pos+1);
+	pos = fileName.find_last_of(".");
+	fileName.erase(pos, fileName.size());
+	return fileName;
 }
 
 ByteArray fileReader(string path){
@@ -245,11 +284,60 @@ ByteArray fileReader(string path){
 		throw runtime_error("File not found");
 	}
 
-	std::ostringstream buffer;
+	ostringstream buffer;
     buffer << file.rdbuf();
 	file.close();
 
 	return ByteArray(&buffer);
+}
+
+// void fileWriter(ByteArray out, string name){
+// 	ofstream outputFile(string(name + ".bin").c_str(), ios::binary);
+// 	for (size_t i = 0; i <out.size(); i++)
+// 	{
+// 		outputFile << out.at(i);
+// 	}
+// 	outputFile.close();
+// }
+
+void creatingMemoryFile(ByteArray out, string name){
+	MessageDigest::loadMessageDigestAlgorithms();
+	SymmetricCipher::loadSymmetricCiphersAlgorithms();
+
+	AsymmetricCipher protectedMemory;
+	ByteArray encryptedOut = protectedMemory.encrypt(sysPubKey, out, AsymmetricCipher::PKCS1_OAEP);
+	// fileWriter(encryptedOut, name);
+
+	ofstream outputFile(string("./documents/inprocess" + name + ".bin").c_str(), ios::binary);
+	for (size_t i = 0; i <out.size(); i++)
+	{
+		outputFile << out.at(i);
+	}
+	outputFile.close();
+}
+
+void upgradeMemoryFile(string name){
+	ifstream inprocessFile(string("./documents/inprocess"+name+".bin").c_str(), ios::binary);
+    ofstream finalFile(string("./documents/final"+name+".bin").c_str(), ios::binary);
+
+	finalFile << inprocessFile.rdbuf();
+	inprocessFile.close();
+    finalFile.close();
+
+    remove(string("./documents/inprocess"+name+".bin").c_str());
+}
+
+ByteArray openMemoryFile(string name, int place){
+	ByteArray fileData;
+	if(place == 1){
+		fileData = fileReader(string("./documents/inprocess"+name+".bin"));
+	}
+	else if(place == 2){
+		fileData = fileReader(string("./documents/final"+name+".bin"));
+	}
+	AsymmetricCipher protectedMemory;
+	ByteArray decryptedData = protectedMemory.decrypt(sysPrivKey, fileData, AsymmetricCipher::PKCS1_OAEP);
+	return decryptedData;
 }
 
 string lowerCase(string word){
@@ -261,7 +349,7 @@ string lowerCase(string word){
 }
 
 void includeDocument(){
-	string in;
+	string in, path;
 	ostringstream fileBuilder;
 
 	system("clear");	
@@ -269,6 +357,7 @@ void includeDocument(){
 	//Crating PDF hash to inser in memory file
 	MessageDigest hashCreator(MessageDigest::SHA256);
 	ByteArray pdf;
+
 	while(true){
 		cout << "Type ESC to quit" << endl;
 		cout << "Provide PDF file path: ";
@@ -279,6 +368,7 @@ void includeDocument(){
 		try
 		{	
 			pdf = fileReader(in);
+			path = in;
 			break;		
 		}
 		catch(runtime_error)
@@ -291,33 +381,13 @@ void includeDocument(){
 
 	fileBuilder << "Hash:" << endl << hash.toString() << endl;
 
-	int count;
-	while (true)
-	{
-		cout << endl << "Type ESC to quit" << endl;
-		cout << "How many signers:";
-		getline(cin, in);
-		if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
-			return;
-		}
-
-		istringstream converter(in);
-		converter >> count;
-
-		if(converter.fail()){
-			cout << "Not a number" << endl;			
-		}
-		else{
-			break;
-		}
-	}
-	
 	vector<string> names;
-	pair<vector<string>, vector<int> > titleCount;
+	pair<vector<string>, vector<int> > titleCount;	
 	int freeSigners = 0;
+	bool approval = false;
 
 
-	for (int i = 0; i < count; i++)
+	while (true)
 	{
 		system("clear");
 		if (!names.empty())
@@ -335,9 +405,18 @@ void includeDocument(){
 				cout << "\t" << titleCount.second.at(i) << " of " << titleCount.first.at(i) << endl;
 			}
 		}
-		cout << "Slots Remaining: " << count-i << endl;
+		if (freeSigners > 0)
+		{
+			cout << "There are " << freeSigners << " signature fields that anyone can sign" << endl;
+		}
+		if (!names.empty() || !titleCount.first.empty() || freeSigners > 0)
+		{
+			cout << endl;
+		}
+		
+		
 		cout << "Type ESC to quit" << endl;
-		cout << "Specifi Signer by" << endl << "1-Full Name" << endl <<"2-Title" << endl << "3-Not Specific" << endl << "->";
+		cout << "Specifi Signer by" << endl << "1-Full Name" << endl <<"2-Title" << endl << "3-Not Specific" << endl << "4-Finish and Save" << endl << "->";
 		getline(cin, in);
 		if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
 			return;
@@ -353,7 +432,6 @@ void includeDocument(){
 					if(find(names.begin(), names.end(), name) != names.end() && !names.empty()){
 						cout << "Name already on the list" << endl << "Press enter to continue" << endl;
 						getline(cin, in);
-						i--;
 					}
 					else{
 						while (true)
@@ -370,7 +448,6 @@ void includeDocument(){
 								if(find(names.begin(), names.end(), name) != names.end() && !names.empty()){
 									cout << "Name already on the list" << endl << "Press enter to continue" << endl;
 									getline(cin, in);
-									i--;
 									break;
 								}
 							}
@@ -411,7 +488,7 @@ void includeDocument(){
 									cout << "Not a number" << endl;			
 								}
 								else if(number <= 0){
-									cout << "Plese type a number biggeur than 0" << endl;
+									cout << "Plese type a number bigger than 0" << endl;
 								}
 								else{
 									while (true)
@@ -421,7 +498,6 @@ void includeDocument(){
 										if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
 											titleCount.first.push_back(title);
 											titleCount.second.push_back(number);
-											i += number-1;
 											break;
 										}
 										else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
@@ -468,32 +544,95 @@ void includeDocument(){
 		else if(in == "3"){			
 			while (true)
 			{
-				cout << "All the remaining " << count-i << " signers will be free to anyone to sign" << endl << "Are you shure (y or n)? ";
+				cout << "How many signature spaces could have anyone's signature?" << endl << "-> ";
+				getline(cin, in);
+
+				istringstream converterFree(in);
+				int numberFree;
+				converterFree >> numberFree;
+
+				if(converterFree.fail()){
+					cout << "Not a number" << endl;			
+				}
+				else if(numberFree <= 0){
+					cout << "Plese type a number bigger than 0" << endl;
+				}
+				else{
+					while (true)
+					{
+						cout << numberFree << " signature spaces are free for anyone to sign(y or n)? ";
+						getline(cin, in);
+						if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
+							freeSigners += numberFree;
+							break;
+						}
+						else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
+							while (true)
+							{
+								cout << "Type the correct quantity: ";
+								getline(cin, in);
+								istringstream freeCorrection(in);
+								int freeCorrectNumber;
+								freeCorrection >> freeCorrectNumber;					
+								if(freeCorrection.fail()){
+									cout << "Not a number" << endl;			
+								}
+								else{
+									numberFree = freeCorrectNumber;
+									break;
+								}											
+							}											
+						}
+						else{
+							cout << "Not an Option. The name is correct (y or n)?" << endl;
+						}
+					}
+					break;						
+				}
+			}
+		}
+		else if(in == "4"){
+			while (true)
+			{
+				cout << "Are you sure you want to finish (y or n)? ";
 				getline(cin, in);
 				if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
-					freeSigners = count-1;
+					while(true){
+						cout << "This document needs approval or only signatures: " << endl << "1-Approval" << endl << "2-Signatures" << endl << "-> ";
+						getline(cin, in);
+						if(in == "1"){
+							approval = true;
+							break;
+						}  
+						else if(in == "2"){
+							approval = false;
+							break;
+						}
+						else{
+							cout << "Not a option, please chose a number" << endl;
+						}
+					}
 					break;
 				}
 				else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
-					i--;
 					break;
 				}
 				else{
-					cout << "Not an Option. The rest are free signers (y or n)?" << endl;
-				}						
+					cout << "Not an option (y or n)" << endl;
+				}
 			}
-			if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
-					break;
+			if (lowerCase(in) == "y" || lowerCase(in) == "yes" || in == "1" || in == "2")
+			{
+				break;
 			}
 		}
 		else{
 			cout << "Not an option, please chose a number" << endl << "Press enter to continue" << endl;
 			getline(cin, in);
-			i--;
 		}				
 	}
 
-	fileBuilder << "nSigners:" << count << endl;
+	fileBuilder << "nSigners:" << names.size()+titleCount.first.size()+freeSigners << endl;
 
 	if (!names.empty())
 	{
@@ -516,10 +655,11 @@ void includeDocument(){
 		fileBuilder << "freeSigners:" << freeSigners << endl;
 	}
 
+	fileBuilder << "needApproval:" << approval << endl;
+
 	ByteArray out(&fileBuilder);
-		
-	creatingMemoryFile(out);
-	cout << out.toString() << endl;
+
+	creatingMemoryFile(out, hash.toHex());
 }
 
 int main(int argc, char **argv) {
@@ -533,9 +673,13 @@ int main(int argc, char **argv) {
 	if (stat("./documents", &st) == -1) {
 		mkdir("./documents", 0700);
 	}
-
-
-	includeDocument();
+	if (stat("./documents/inprocess", &st) == -1) {
+		mkdir("./documents/inprocess", 0700);
+	}
+	if (stat("./documents/final", &st) == -1) {
+		mkdir("./documents/final", 0700);
+	}
+	
 
 	// while (true)
 	// {
@@ -554,16 +698,16 @@ int main(int argc, char **argv) {
 	// 		createKeysAndCertificate();
 	// 	}
 	// 	else if(in == "2"){
-
+	//
 	// 	}
 	// 	else if(in == "3"){
-
+	//		 includeDocument();
 	// 	}
 	// 	else if(in == "4"){
 	// 		signDocument();
 	// 	}
 	// 	else if(in == "5"){
-	// 		signDocument();
+	// 		
 	// 	}
 	// 	else{
 	// 		cout << "Type function number ->";
