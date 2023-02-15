@@ -100,8 +100,6 @@ void createKeysAndCertificate(){
 	certBuilder.setPublicKey(*pubKey);
 
 	time_t now = time(0);
-	setenv("TZ", "America/Sao_Paulo", 1);
-	struct tm* t = localtime(&now);
 
 	DateTime dateTimeNow(now);
 	DateTime dateTimeExpire(now+60*60*24*365);
@@ -340,10 +338,20 @@ ByteArray openMemoryFile(string name, int place){
 	return decryptedData;
 }
 
-string lowerCase(string word){
+string lowerCase(string word, int spaces = 0){
 	for (size_t i = 0; i < word.size(); i++)
 	{
 		word.at(i) = tolower(word.at(i));
+		if (word.at(i) == ' ' && spaces > 0)
+		{	
+			if(spaces == 1){
+				word.at(i) = '_';
+			}
+			else if(spaces == 2){
+				word.erase(i, 1);
+				i--;
+			}
+		}
 	}
 	return word;
 }
@@ -639,7 +647,7 @@ void includeDocument(){
 		fileBuilder << "nameSigners:" << names.size() << endl;
 		for (size_t i = 0; i < names.size(); i++)
 		{
-			fileBuilder << names.at(i) << endl;
+			fileBuilder << lowerCase(names.at(i), 2) << endl;
 		}
 	}
 
@@ -647,7 +655,7 @@ void includeDocument(){
 		fileBuilder << "titleSigners:" << titleCount.first.size() << endl;
 		for (size_t i = 0; i < titleCount.first.size(); i++)
 		{
-			fileBuilder << titleCount.second.at(i) << "\t" << titleCount.first.at(i) << endl;
+			fileBuilder << titleCount.second.at(i) << "\t" << lowerCase(titleCount.first.at(i), 2) << endl;
 		}
 	}
 
@@ -679,6 +687,10 @@ int main(int argc, char **argv) {
 	if (stat("./documents/final", &st) == -1) {
 		mkdir("./documents/final", 0700);
 	}
+
+	cout << lowerCase("teste tEsTe TeStaDo", 0) << endl;
+	cout << lowerCase("teste tEsTe TeStaDo", 1) << endl;
+	cout << lowerCase("teste tEsTe TeStaDo", 2) << endl;
 	
 
 	// while (true)
