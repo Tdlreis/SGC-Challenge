@@ -17,46 +17,110 @@
 
 #include <sys/stat.h>
 
+
 string pemPub = "-----BEGIN PUBLIC KEY-----" "\n"
-				"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxA3ipLf2DHVxiJ2zVnvR" "\n"
-				"XsrVDKNjjp9orDsIzXSxi1Q4SoKjx/+s6C+2elHM7KEutoWINn8U/0t9ZvTk6S3G" "\n"
-				"MPLpdpLefWuwvT2lxP5sNSLYcsQdJ34A8T79HLudzPkWj/psru5pcWZaD1YNeNZM" "\n"
-				"0ehiBweqPcOZ6MNu5mkcF156zgnJkTAdlwUjf5yBIeIQMg+MiumGiYfwa83ja0jK" "\n"
-				"f5misoLF/fuCman9nvX4mjyRuxQq8Gs/DYC+B3ywJrEVsG5p1tsTy0RmLgccILW/" "\n"
-				"wvm4RFXDrv2akLLxwQPNk3FHiUKCQH6cIf+V9WsdxUh39noVs6RnMkAEOshQRbQ+" "\n"
-				"KwIDAQAB" "\n"
+				"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnW/a1EB0LmwogOb59IabbQBdwIya/Ky6KmNfXoT3tbOlFPuCo9pt95obvI7+ydUtv3veLIIIDHNTpcjIIEIk38YFeYQkD+1Y7MVljZt0JqGFFNYuOrwKH024i8DtroKAwQKSmR3ZqbhkPH5GA7c+OM2fN2sbTTakS7FZh60NLhr4YAq5YE9d+CkDveXr2lvu9d1bR6X0NHTKNQZe9wN2Jy7ZUuj73Y/DCtjSuS/mYtLPacdYlYDfxv9x2Y8CcyQvT3r4DMFiJP03YcdmaSQA3EZ0HTuw8XsPexJiFtZdRnpuCTnBqZ/jH4oVBJGXJIDHtuICcdUrj9IQafiRljbfzQIDAQAB" "\n"
 				"-----END PUBLIC KEY-----" "\n";
 RSAPublicKey sysPubKey(pemPub);
 string pemPriv = "-----BEGIN RSA PRIVATE KEY-----" "\n"
-				"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" "\n"
+				"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" "\n"
 				"-----END RSA PRIVATE KEY-----" "\n";
 RSAPrivateKey sysPrivKey(pemPriv);
 
+//Utility Functions
+string getFileName(string path){
+	int pos = path.find_last_of("/");
+	string fileName = path.substr(pos+1);
+	pos = fileName.find_last_of(".");
+	fileName.erase(pos, fileName.size());
+	return fileName;
+}
 
+ByteArray fileReader(string path){
+	ifstream file(path.c_str(), ios::binary);
+	if(!file){
+		throw runtime_error("File not found");
+	}
+
+	ostringstream buffer;
+    buffer << file.rdbuf();
+	file.close();
+
+	return ByteArray(&buffer);
+}
+
+// void fileWriter(ByteArray out, string name){
+// 	ofstream outputFile(string(name + ".bin").c_str(), ios::binary);
+// 	for (size_t i = 0; i <out.size(); i++)
+// 	{
+// 		outputFile << out.at(i);
+// 	}
+// 	outputFile.close();
+// }
+
+void creatingMemoryFile(ByteArray out, string name){
+	MessageDigest::loadMessageDigestAlgorithms();
+	SymmetricCipher::loadSymmetricCiphersAlgorithms();
+
+	ofstream debugFile(string("./documents/inprocess/" + name + ".txt").c_str());
+	debugFile << out.toString();
+	debugFile.close();
+
+	AsymmetricCipher protectedMemory;
+	ByteArray encryptedOut = protectedMemory.encrypt(sysPubKey, out, AsymmetricCipher::PKCS1_OAEP);
+	// fileWriter(encryptedOut, name);	
+
+	ofstream outputFile(string("./documents/inprocess/" + name + ".bin").c_str(), ios::binary);
+	for (size_t i = 0; i <encryptedOut.size(); i++)
+	{
+		outputFile << encryptedOut.at(i);
+	}
+	outputFile.close();
+}
+
+void upgradeMemoryFile(string name){
+	ifstream inprocessFile(string("./documents/inprocess"+name+".bin").c_str(), ios::binary);
+    ofstream finalFile(string("./documents/final"+name+".bin").c_str(), ios::binary);
+
+	finalFile << inprocessFile.rdbuf();
+	inprocessFile.close();
+    finalFile.close();
+
+    remove(string("./documents/inprocess"+name+".bin").c_str());
+}
+
+ByteArray openMemoryFile(string name, int place){
+	ByteArray fileData;
+	if(place == 1){
+		fileData = fileReader(string("./documents/inprocess/"+name+".bin"));
+	}
+	else if(place == 2){
+		fileData = fileReader(string("./documents/final/"+name+".bin"));
+	}
+	AsymmetricCipher protectedMemory;
+	ByteArray decryptedData = protectedMemory.decrypt(sysPrivKey, fileData, AsymmetricCipher::PKCS1_OAEP);
+	return decryptedData;
+}
+
+string lowerCase(string word, int spaces = 0){
+	for (size_t i = 0; i < word.size(); i++)
+	{
+		word.at(i) = tolower(word.at(i));
+		if (word.at(i) == ' ' && spaces > 0)
+		{	
+			if(spaces == 1){
+				word.at(i) = '_';
+			}
+			else if(spaces == 2){
+				word.erase(i, 1);
+				i--;
+			}
+		}
+	}
+	return word;
+}
+
+//Menu Functions
 void createKeysAndCertificate(){	
 	MessageDigest::loadMessageDigestAlgorithms();
 	SymmetricCipher::loadSymmetricCiphersAlgorithms();
@@ -147,213 +211,376 @@ void createKeysAndCertificate(){
 void signDocument(){
 	MessageDigest::loadMessageDigestAlgorithms();
 	SymmetricCipher::loadSymmetricCiphersAlgorithms();
-	
-	cout << "File Path: ";
-	string in;
-	getline(cin, in);
 
-	string path = in;
-	
+	//Creating PDF hash to insert in memory file
+	MessageDigest hashCreator(MessageDigest::SHA256);
+	ByteArray pdf;
+	string in, path;
 
-	ifstream file(in.c_str(), ios::binary);
-	if(!file){
-		cout << "File not found" << endl;
-		return;
-	}
-
-	// Get the length of the file
-    file.seekg(0, file.end);
-    int length = file.tellg();
-    file.seekg(0, file.beg);
-
-    // Read the contents of the file into a buffer
-    unsigned char* buffer = new unsigned char[length];
-    file.read ((char*)buffer, length);
-	file.close();
-
-
-	MessageDigest teste(MessageDigest::SHA256);
-	ByteArray b(buffer, length);
-	delete[] buffer;
-	ByteArray hash = teste.doFinal(b);
-
-	cout << "Signer complete name: ";
-	getline(cin, in);
-
-	for (size_t i = 0; i < in.size(); i++)
-	{
-		in.at(i) = tolower(in.at(i));
-		if (in.at(i) == ' ')
-		{
-			in.at(i) = '_';
+	while(true){
+		cout << "Type ESC to quit" << endl;
+		cout << "Provide original PDF file path: ";
+		getline(cin, in); 
+		if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+			return;
 		}
-	}
-
-	ifstream file2(string("./certificates/" + in + ".p12").c_str(), ios::binary);
-	if(!file2){
-		cout << "Certificate not found!" << endl << "Please check your speel or create certificate" << endl;
-		return;
-	}
-
-	// Get the length of the file2
-    file2.seekg(0, file2.end);
-    length = file2.tellg();
-    file2.seekg(0, file2.beg);
-
-    // Read the contents of the file2 into a buffer2
-    unsigned char* buffer2 = new unsigned char[length];
-    file2.read ((char*)buffer2, length);
-	file2.close();
-	ByteArray c(buffer2, length);
-	delete[] buffer2;
-
-	Pkcs12 p12 = *Pkcs12Factory().fromDerEncoded(c);
-
-	cout << "Signer password: ";
-	getline(cin, in);
-
-	Signer sig;
-	ByteArray signiture;
-	try{
-		signiture = sig.sign(*p12.getPrivKey(in), hash, MessageDigest::SHA256);
-	}
-	catch(Pkcs12Exception){
-		cout << "Incorrect Password" << endl;
-	}
-	if(uncaught_exception()){
-		cout << signiture.toHex() << endl;	
-	}
-
-	cout << endl<< "Do you: " << endl;
-	cout << "1-Agree: " << endl;
-	cout << "2-Disagree: " << endl;
-	cout << "0-Quit: " << endl;
-	getline(cin, in);
-	bool accept;
-
-	
-
-	if (in == "1")
-	{
-		accept = true;
-	}
-	else if(in == "2"){
-		accept = false;
-	}
-	else if(in == "0"){
-		cout << "Ok, think about it" << endl;
-	}
-	else{
-		cout << "Not an option, please choose a number" << endl;
-	}
-	
-	ostringstream  out;
-	out << "Decision:" << endl << accept << endl;
-	cout << out.str() << endl;
-	out << "Signature: " << endl << signiture.toString();
-
-	cout << out.str() << endl;
-
-	ByteArray outf(&out);
-	
-	int pos = path.find_last_of("/");
-	string fileName = path.substr(pos+1);
-	pos = fileName.find_last_of(".");
-	fileName.erase(pos, fileName.size());
-
-	ofstream out_file;
-	out_file.open(string(path+".txt").c_str());
-	out_file << out;
-	out_file.close();
-
-}
-
-string getFileName(string path){
-	int pos = path.find_last_of("/");
-	string fileName = path.substr(pos+1);
-	pos = fileName.find_last_of(".");
-	fileName.erase(pos, fileName.size());
-	return fileName;
-}
-
-ByteArray fileReader(string path){
-	ifstream file(path.c_str(), ios::binary);
-	if(!file){
-		throw runtime_error("File not found");
-	}
-
-	ostringstream buffer;
-    buffer << file.rdbuf();
-	file.close();
-
-	return ByteArray(&buffer);
-}
-
-// void fileWriter(ByteArray out, string name){
-// 	ofstream outputFile(string(name + ".bin").c_str(), ios::binary);
-// 	for (size_t i = 0; i <out.size(); i++)
-// 	{
-// 		outputFile << out.at(i);
-// 	}
-// 	outputFile.close();
-// }
-
-void creatingMemoryFile(ByteArray out, string name){
-	MessageDigest::loadMessageDigestAlgorithms();
-	SymmetricCipher::loadSymmetricCiphersAlgorithms();
-
-	AsymmetricCipher protectedMemory;
-	ByteArray encryptedOut = protectedMemory.encrypt(sysPubKey, out, AsymmetricCipher::PKCS1_OAEP);
-	// fileWriter(encryptedOut, name);
-
-	ofstream outputFile(string("./documents/inprocess" + name + ".bin").c_str(), ios::binary);
-	for (size_t i = 0; i <out.size(); i++)
-	{
-		outputFile << out.at(i);
-	}
-	outputFile.close();
-}
-
-void upgradeMemoryFile(string name){
-	ifstream inprocessFile(string("./documents/inprocess"+name+".bin").c_str(), ios::binary);
-    ofstream finalFile(string("./documents/final"+name+".bin").c_str(), ios::binary);
-
-	finalFile << inprocessFile.rdbuf();
-	inprocessFile.close();
-    finalFile.close();
-
-    remove(string("./documents/inprocess"+name+".bin").c_str());
-}
-
-ByteArray openMemoryFile(string name, int place){
-	ByteArray fileData;
-	if(place == 1){
-		fileData = fileReader(string("./documents/inprocess"+name+".bin"));
-	}
-	else if(place == 2){
-		fileData = fileReader(string("./documents/final"+name+".bin"));
-	}
-	AsymmetricCipher protectedMemory;
-	ByteArray decryptedData = protectedMemory.decrypt(sysPrivKey, fileData, AsymmetricCipher::PKCS1_OAEP);
-	return decryptedData;
-}
-
-string lowerCase(string word, int spaces = 0){
-	for (size_t i = 0; i < word.size(); i++)
-	{
-		word.at(i) = tolower(word.at(i));
-		if (word.at(i) == ' ' && spaces > 0)
+		try
 		{	
-			if(spaces == 1){
-				word.at(i) = '_';
-			}
-			else if(spaces == 2){
-				word.erase(i, 1);
-				i--;
-			}
+			pdf = fileReader(in);
+			path = in;
+			break;		
+		}
+		catch(runtime_error)
+		{
+			cout << "File not Found" << endl;
 		}
 	}
-	return word;
+
+	ByteArray hash = hashCreator.doFinal(pdf);
+	ByteArray memoryFile;
+	try
+	{	
+		memoryFile = openMemoryFile(hash.toHex(), 1);
+	}
+	catch(runtime_error)
+	{
+		cout << "Document not registered"  << endl << "Press enter to continue" << endl;
+		getline(cin, in);
+		return;
+	}
+
+	ostringstream fileBuilder;
+	fileBuilder << memoryFile.toString();
+
+	
+	while (true)
+	{
+		vector<string> names;
+		pair<vector<string>, vector<int> > titleCount;
+		int posStart, posTerm, posSeparator, posEnd, number, freeSigners;
+		bool approval = false;
+
+		posTerm = fileBuilder.str().find("nameSigners:");
+		posSeparator = fileBuilder.str().find(":", posTerm+1);
+		posEnd = fileBuilder.str().find("\n", posSeparator);
+		number = atoi(fileBuilder.str().substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+
+
+		for (int i = 0; i < number; i++)
+		{
+			posStart = posEnd+1;
+			posEnd = fileBuilder.str().find("\n", posStart);
+			names.push_back(fileBuilder.str().substr(posStart, posEnd-posStart));
+		}
+
+		posTerm = fileBuilder.str().find("titleSigners:");
+		posSeparator = fileBuilder.str().find(":", posTerm+1);
+		posEnd = fileBuilder.str().find("\n", posSeparator);
+		number = atoi(fileBuilder.str().substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+
+		for (int i = 0; i < number; i++)
+		{
+			posStart = posEnd+1;
+			posEnd = fileBuilder.str().find("\t", posStart);
+			titleCount.first.push_back(fileBuilder.str().substr(posStart, posEnd-posStart).c_str());
+
+			posStart = posEnd+1;
+			posEnd = fileBuilder.str().find("\n", posStart);
+			titleCount.second.push_back(atoi(fileBuilder.str().substr(posStart, posEnd-posStart).c_str()));
+		}
+
+		posTerm = fileBuilder.str().find("freeSigners:");
+		posSeparator = fileBuilder.str().find(":", posTerm+1);
+		posEnd = fileBuilder.str().find("\n", posSeparator);
+		freeSigners = atoi(fileBuilder.str().substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+
+		posTerm = fileBuilder.str().find("needApproval:");
+		posSeparator = fileBuilder.str().find(":", posTerm+1);
+		posEnd = fileBuilder.str().find("\n", posSeparator);
+		number = atoi(fileBuilder.str().substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+		approval = (number != 0);
+
+
+		system("clear");
+		cout  << "This document needs to be sign by: " << endl;
+		if (!names.empty())
+		{
+			for (size_t i = 0; i < names.size(); i++)
+			{
+				cout << "\t" << names.at(i) << endl;
+			}
+		}
+		if(!titleCount.first.empty()){
+			cout << "Anyone with the title: " << endl;
+			for (size_t i = 0; i < titleCount.first.size(); i++)
+			{
+				cout << "\t" << titleCount.second.at(i) << " people with the title: " << titleCount.first.at(i) << endl;
+			}
+		}
+		if (freeSigners > 0)
+		{
+			cout << "And " << freeSigners << " people in the organization" << endl;
+		}
+		if (!names.empty() || !titleCount.first.empty() || freeSigners > 0)
+		{
+			cout << endl;
+		}
+
+		cout << "Type ESC to quit" << endl;
+		cout << "Type your full name: ";
+		getline(cin, in);
+		if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+			return;
+		}
+		
+		string certificateName = lowerCase(in, 1);
+		ByteArray certFile, signature;
+
+		try
+		{	
+			certFile = fileReader(string("./certificates/" + certificateName + ".p12").c_str());
+			Pkcs12 p12 = *Pkcs12Factory().fromDerEncoded(certFile);
+			string name, title, password;
+			ByteArray pubKeyDer;
+
+			while (true)
+			{
+				cout << "Signer password: ";
+				getline(cin, in);
+				Signer signatureCretor;
+				try{
+					signature = signatureCretor.sign(*p12.getPrivKey(in), hash, MessageDigest::SHA256);
+					name = p12.getCertificate(in)->getSubject().getEntries(RDNSequence::COMMON_NAME).at(0);
+					title = p12.getCertificate(in)->getSubject().getEntries(RDNSequence::TITLE).at(0);
+					pubKeyDer =  p12.getCertificate(in)->getPublicKey()->getDerEncoded();
+
+					int category = 0;
+					if(find(names.begin(), names.end(), name) != names.end() && !names.empty()){
+						category = 1;
+					}
+					else if(find(titleCount.first.begin(), titleCount.first.end(), title) != titleCount.first.end() && !titleCount.first.empty()){
+						category = 2;
+					}
+					else if(freeSigners > 0){
+						category = 3;
+					}
+					else{
+						cout << "You are can't sign this document" << endl;
+						break;
+					}
+					if(approval){
+						while (true)
+						{
+							cout << "Type ESC to quit" << endl;
+							cout << endl<< "Do you: " << endl;
+							cout << "1-Agree: " << endl;
+							cout << "2-Disagree: " << endl;
+							getline(cin, in);
+							bool accept;
+							if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+								cout << "Ok, think about it and come back" << endl << "Your signature was not finalized" << endl << "Press enter to continue" << endl;
+								getline(cin, in);
+								return;
+							}
+							if (in == "1")
+							{
+								cout << fileBuilder.str() << endl;
+								accept = true;
+								if(category == 1){
+									string editor = fileBuilder.str();
+									posTerm = editor.find("nameSigners:");
+									posSeparator = editor.find(":", posTerm+1);
+									posEnd = editor.find("\n", posSeparator);
+									int editNumber = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+									editNumber--;
+									stringstream intToString;
+									intToString << editNumber;
+									editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
+									int posStartName = editor.find(name);
+									int posEndName = editor.find("\n", posStartName);							
+									editor.erase(posStartName, posEndName-posStartName+1);
+									fileBuilder.str("");
+									fileBuilder << editor;
+								}
+								else if(category == 2){	
+									string editor = fileBuilder.str();
+
+									posTerm = editor.find("titleSigners:");
+									posSeparator = editor.find(":", posTerm+1);
+									posEnd = editor.find("\n", posSeparator);
+									int editNumber = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+									editNumber--;
+									stringstream intToString;
+									intToString << editNumber;
+									editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
+
+									int posStartTitle = editor.find(title);
+									int posEndTitle = editor.find("\t", posStartTitle);
+
+									posStart = posEndTitle+1;
+									posEnd = editor.find("\n", posStart);
+									int titleNumber = atoi(editor.substr(posStart, posEnd-posStart).c_str());
+									titleNumber--;
+									if(titleNumber == 0){
+										editor.erase(posStartTitle-1, posEnd-posStartTitle+1);
+									}
+									else{
+										intToString.str("");
+										intToString << editNumber;
+										editor.replace(posStart, posEnd-posStart, intToString.str());
+									}
+									fileBuilder.str("");
+									fileBuilder << editor;
+								}
+								else{
+									string editor = fileBuilder.str();
+									posTerm = editor.find("freeSigners:");
+									posSeparator = editor.find(":", posTerm+1);
+									posEnd = editor.find("\n", posSeparator);
+									freeSigners = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+									freeSigners--;
+									stringstream intToString;
+									intToString << freeSigners;
+									editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
+									fileBuilder.str("");
+									fileBuilder << editor;
+								}
+								fileBuilder << name << "\t" << title << "\t" << signature.toStream() << "\t" << accept << "\t" << pubKeyDer.toStream() << "\t" << "day" << endl;
+
+								cout << fileBuilder.str() << endl;
+
+								ByteArray out(&fileBuilder);
+								creatingMemoryFile(out, hash.toHex());
+								break;
+							}
+							else if(in == "2"){
+								accept = false;
+								if(category == 1){
+									string editor = fileBuilder.str();
+									posTerm = editor.find("nameSigners:");
+									posSeparator = editor.find(":", posTerm+1);
+									posEnd = editor.find("\n", posSeparator);
+									int editNumber = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+									editNumber--;
+									stringstream intToString;
+									intToString << editNumber;
+									editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
+									int posStartName = editor.find(name);
+									int posEndName = editor.find("\n", posStartName);							
+									editor.erase(posStartName, posEndName-posStartName+1);
+									fileBuilder.str("");
+									fileBuilder << editor;
+								}
+								else if(category == 2){	
+									string editor = fileBuilder.str();
+									int posStartTitle = editor.find(title);
+									int posEndTitle = editor.find("\t", posStartTitle);
+
+									posStart = posEndTitle+1;
+									posEnd = editor.find("\n", posStart);
+									int titleNumber = atoi(editor.substr(posStart, posEnd-posStart).c_str());
+									titleNumber--;
+									if(titleNumber == 0){
+										editor.erase(posStartTitle, posEnd);
+									}
+									else{
+										editor.replace(posStart, posEnd-posStart, string("" + titleNumber).c_str());
+									}
+									fileBuilder.str("");
+									fileBuilder << editor;
+								}
+								else{
+									string editor = fileBuilder.str();
+									posTerm = editor.find("freeSigners:");
+									posSeparator = editor.find(":", posTerm+1);
+									posEnd = editor.find("\n", posSeparator);
+									freeSigners = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+									freeSigners--;
+									stringstream intToString;
+									intToString << freeSigners;
+									editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
+									fileBuilder.str("");
+									fileBuilder << editor;
+								}
+								fileBuilder << name << "\t" << title << "\t" << signature.toString() << "\t" << accept << "\t" << pubKeyDer.toStream() << "\t" << "day" << endl;
+								ByteArray out(&fileBuilder);
+								creatingMemoryFile(out, hash.toHex());
+								break;
+							}
+							else{
+								cout << "Not an option, please choose a number" << endl;
+							}
+						}
+					}
+					else{
+						if(category == 1){
+									string editor = fileBuilder.str();
+									posTerm = editor.find("nameSigners:");
+									posSeparator = editor.find(":", posTerm+1);
+									posEnd = editor.find("\n", posSeparator);
+									int editNumber = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+									editNumber--;
+									stringstream intToString;
+									intToString << editNumber;
+									editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
+									int posStartName = editor.find(name);
+									int posEndName = editor.find("\n", posStartName);							
+									editor.erase(posStartName, posEndName-posStartName+1);
+									fileBuilder.str("");
+									fileBuilder << editor;
+								}
+								else if(category == 2){	
+									string editor = fileBuilder.str();
+									int posStartTitle = editor.find(title);
+									int posEndTitle = editor.find("\t", posStartTitle);
+
+									posStart = posEndTitle+1;
+									posEnd = editor.find("\n", posStart);
+									int titleNumber = atoi(editor.substr(posStart, posEnd-posStart).c_str());
+									titleNumber--;
+									if(titleNumber == 0){
+										editor.erase(posStartTitle, posEnd);
+									}
+									else{
+										editor.replace(posStart, posEnd-posStart, string("" + titleNumber).c_str());
+									}
+									fileBuilder.str("");
+									fileBuilder << editor;
+								}
+								else{
+									string editor = fileBuilder.str();
+									posTerm = editor.find("freeSigners:");
+									posSeparator = editor.find(":", posTerm+1);
+									posEnd = editor.find("\n", posSeparator);
+									freeSigners = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+									freeSigners--;
+									stringstream intToString;
+									intToString << freeSigners;
+									editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
+									fileBuilder.str("");
+									fileBuilder << editor;
+								}
+						fileBuilder << name << "\t" << title << "\t" << signature.toString() << "\t" << "n/a" << "\t" << pubKeyDer.toStream() << "\t" << "day" << endl;
+
+						ByteArray out(&fileBuilder);
+						creatingMemoryFile(out, hash.toHex());
+						break;
+					}
+					break;
+				}
+				catch(Pkcs12Exception){
+					cout << "Incorrect Password" << endl << "Press enter to continue" << endl;
+					getline(cin, in);					
+				}		
+			}
+			
+		}
+		catch(runtime_error)
+		{
+			cout << "Certificate not found!" << endl << "Please check your speel or create certificate" << endl << "Press enter to continue" << endl;
+			getline(cin, in);;
+		}
+	}
 }
 
 void includeDocument(){
@@ -362,7 +589,7 @@ void includeDocument(){
 
 	system("clear");	
 
-	//Crating PDF hash to inser in memory file
+	//Creating PDF hash to insert in memory file
 	MessageDigest hashCreator(MessageDigest::SHA256);
 	ByteArray pdf;
 
@@ -390,7 +617,7 @@ void includeDocument(){
 	fileBuilder << "Hash:" << endl << hash.toString() << endl;
 
 	vector<string> names;
-	pair<vector<string>, vector<int> > titleCount;	
+	pair<vector<string>, vector<int> > titleCount;
 	int freeSigners = 0;
 	bool approval = false;
 
@@ -424,7 +651,7 @@ void includeDocument(){
 		
 		
 		cout << "Type ESC to quit" << endl;
-		cout << "Specifi Signer by" << endl << "1-Full Name" << endl <<"2-Title" << endl << "3-Not Specific" << endl << "4-Finish and Save" << endl << "->";
+		cout << "Specify Signer by" << endl << "1-Full Name" << endl <<"2-Title" << endl << "3-Not Specific" << endl << "4-Finish and Save" << endl << "->";
 		getline(cin, in);
 		if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
 			return;
@@ -444,7 +671,7 @@ void includeDocument(){
 					else{
 						while (true)
 						{
-							cout << "You typed: " << name << endl << "Are you shure (y or n)? ";
+							cout << "You typed: " << name << endl << "Are you sure (y or n)? ";
 							getline(cin, in);
 							if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
 								names.push_back(name);
@@ -480,7 +707,7 @@ void includeDocument(){
 					string title = in;
 					while (true)
 					{
-						cout << "You typed: " << title << endl << "Are you shure (y or n)? ";
+						cout << "You typed: " << title << endl << "Are you sure (y or n)? ";
 						getline(cin, in);
 						if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
 							while (true)
@@ -496,7 +723,7 @@ void includeDocument(){
 									cout << "Not a number" << endl;			
 								}
 								else if(number <= 0){
-									cout << "Plese type a number bigger than 0" << endl;
+									cout << "Please type a number bigger than 0" << endl;
 								}
 								else{
 									while (true)
@@ -563,7 +790,7 @@ void includeDocument(){
 					cout << "Not a number" << endl;			
 				}
 				else if(numberFree <= 0){
-					cout << "Plese type a number bigger than 0" << endl;
+					cout << "Please type a number bigger than 0" << endl;
 				}
 				else{
 					while (true)
@@ -640,30 +867,27 @@ void includeDocument(){
 		}				
 	}
 
-	fileBuilder << "nSigners:" << names.size()+titleCount.first.size()+freeSigners << endl;
-
-	if (!names.empty())
-	{
-		fileBuilder << "nameSigners:" << names.size() << endl;
+	fileBuilder << "nameSigners:" << names.size() << endl;
+	if(!names.empty()){
 		for (size_t i = 0; i < names.size(); i++)
 		{
-			fileBuilder << lowerCase(names.at(i), 2) << endl;
+			fileBuilder << names.at(i) << endl;
 		}
 	}
 
+	fileBuilder << "titleSigners:" << titleCount.first.size() << endl;
 	if(!titleCount.first.empty()){
-		fileBuilder << "titleSigners:" << titleCount.first.size() << endl;
 		for (size_t i = 0; i < titleCount.first.size(); i++)
 		{
-			fileBuilder << titleCount.second.at(i) << "\t" << lowerCase(titleCount.first.at(i), 2) << endl;
+			fileBuilder << titleCount.first.at(i) << "\t" << titleCount.second.at(i) << endl;
 		}
 	}
 
-	if(freeSigners > 0){
-		fileBuilder << "freeSigners:" << freeSigners << endl;
-	}
+	fileBuilder << "freeSigners:" << freeSigners << endl;
 
 	fileBuilder << "needApproval:" << approval << endl;
+
+	fileBuilder << "signatures:" << endl;
 
 	ByteArray out(&fileBuilder);
 
@@ -688,43 +912,37 @@ int main(int argc, char **argv) {
 		mkdir("./documents/final", 0700);
 	}
 
-	cout << lowerCase("teste tEsTe TeStaDo", 0) << endl;
-	cout << lowerCase("teste tEsTe TeStaDo", 1) << endl;
-	cout << lowerCase("teste tEsTe TeStaDo", 2) << endl;
-	
+	while (true)
+	{
+		system("clear");
+		cout << "Functions: " << endl;
+		cout << "1-Create Certificate" << endl;
+		cout << "2-Include Document" << endl;
+		cout << "3-Sign Document" << endl;
+		cout << "4-Verify Document" << endl;
+		cout << "Type function number ->";
+		string in;
+		cin >> in;
 
-	// while (true)
-	// {
-	// 	cout << "Functions: " << endl;
-	// 	cout << "1-Create Certificate" << endl;
-	// 	cout << "2-Import p12 file" << endl;
-	// 	cout << "3-Include Document" << endl;
-	// 	cout << "4-Sign Document" << endl;
-	// 	cout << "5-Verify Document" << endl;
-	// 	cout << "Type function number ->";
-	// 	string in;
-	// 	cin >> in;
+		cin.ignore();
 
 
-	// 	if(in == "1"){
-	// 		createKeysAndCertificate();
-	// 	}
-	// 	else if(in == "2"){
-	//
-	// 	}
-	// 	else if(in == "3"){
-	//		 includeDocument();
-	// 	}
-	// 	else if(in == "4"){
-	// 		signDocument();
-	// 	}
-	// 	else if(in == "5"){
-	// 		
-	// 	}
-	// 	else{
-	// 		cout << "Type function number ->";
-	// 	}
-	// }
+		if(in == "1"){
+			createKeysAndCertificate();
+		}
+		else if(in == "2"){
+			 includeDocument();
+		}
+		else if(in == "3"){
+			signDocument();
+		}
+		else if(in == "4"){
+			
+		}
+		else{
+			cout << "Type function number ->";
+		}
+	}
 
 	return 0;
 }
