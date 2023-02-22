@@ -5,6 +5,7 @@
 #include <vector>
 #include <sstream>
 #include <algorithm>
+#include <ctime>
 
 #include <libcryptosec/MessageDigest.h>
 #include <libcryptosec/RSAKeyPair.h>
@@ -99,12 +100,7 @@ ByteArray decryptData(ByteArray data) {
 	debugFile << out.str();
 	debugFile.close();
 
-
-	Base64 converter;
-	string outString = out.str();
-	ByteArray outByteArray = converter.decode(outString);
-
-	return outByteArray;
+	return ByteArray(&out);
 }
 
 string getFileName(string path){
@@ -145,16 +141,32 @@ void creatingMemoryFile(ByteArray out, string name){
 	debugFile << out.toString();
 	debugFile.close();
 
-	ByteArray encryptedOut = encryptData(out);
+    unsigned char key[EVP_MAX_KEY_LENGTH], iv[EVP_MAX_IV_LENGTH];
+    EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha256(), NULL, reinterpret_cast<const unsigned char*>(sysKey.getEncoded().toString().c_str()), sysKey.getEncoded().toString().size(), 1, key, iv);
 
-	ofstream debugFile2(string("./documents/inprocess/a.txt").c_str());
-	debugFile2 << encryptedOut.toString();
-	debugFile2.close();
+
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv);
+
+    int out_len = out.toString().size();
+    unsigned char outbuf[out_len];
+    EVP_EncryptUpdate(ctx, outbuf, &out_len, reinterpret_cast<const unsigned char*>(out.toString().c_str()), out.toString().size());
+
+	ostringstream outStream;
+    outStream.write(reinterpret_cast<const char*>(outbuf), out_len);
+
+
+    EVP_EncryptFinal_ex(ctx, outbuf, &out_len);
+    outStream.write(reinterpret_cast<const char*>(outbuf), out_len);
+
+
+    EVP_CIPHER_CTX_free(ctx);
+
 
 	ofstream outputFile(string("./documents/inprocess/" + name + ".bin").c_str(), ios::binary);
-	for (size_t i = 0; i <encryptedOut.size(); i++)
+	for (size_t i = 0; i < outStream.str().size(); i++)
 	{
-		outputFile << encryptedOut.at(i);
+		outputFile << outStream.str().c_str()[i];
 	}
 	outputFile.close();
 }
@@ -171,16 +183,56 @@ void upgradeMemoryFile(string name){
 }
 
 ByteArray openMemoryFile(string name, int place){
-	ByteArray fileData;
+	string path;
 	if(place == 1){
-		fileData = fileReader(string("./documents/inprocess/"+name+".bin"));
+		path = "./documents/inprocess/"+name+".bin";
 	}
 	else if(place == 2){
-		fileData = fileReader(string("./documents/final/"+name+".bin"));
+		path = "./documents/final/"+name+".bin";
 	}
-	ByteArray decryptedData = decryptData(fileData);
 
-	return decryptedData;
+	ifstream file(path.c_str(), ios::binary);
+	if(!file){
+		throw runtime_error("File not found");
+	}
+
+	ostringstream fileData;
+    fileData << file.rdbuf();
+	file.close();
+
+	ofstream debugFile(string("./documents/inprocess/d.txt").c_str());
+	debugFile << fileData.str() << endl;
+
+    unsigned char key[EVP_MAX_KEY_LENGTH], iv[EVP_MAX_IV_LENGTH];
+	EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha256(), NULL, reinterpret_cast<const unsigned char*>(sysKey.getEncoded().toString().c_str()), sysKey.getEncoded().toString().size(), 1, key, iv);
+
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    EVP_CIPHER_CTX_init(ctx);
+    EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv);
+
+
+    unsigned char out_buf[fileData.str().size() + EVP_MAX_BLOCK_LENGTH];
+    int out_len;
+    
+    if (!EVP_DecryptUpdate(ctx, out_buf, &out_len, reinterpret_cast<const unsigned char*>(fileData.str().c_str()),  fileData.str().size())) {
+        EVP_CIPHER_CTX_cleanup(ctx);
+        throw runtime_error("Error Decrypting");
+    }
+	ostringstream out;
+	out.write(reinterpret_cast<const char*>(out_buf), out_len);
+
+
+    if (EVP_DecryptFinal_ex(ctx, out_buf, &out_len)) {
+    	out.write(reinterpret_cast<const char*>(out_buf), out_len);
+    }
+
+    EVP_CIPHER_CTX_cleanup(ctx);
+
+	
+	debugFile << out.str();
+	debugFile.close();
+
+	return ByteArray(&out);
 }
 
 string lowerCase(string word, int spaces = 0){
@@ -293,6 +345,318 @@ void createKeysAndCertificate(){
 	delete (pkcs12);
 }
 
+
+void includeDocument(){
+	string in, path;
+	ostringstream fileBuilder;
+
+	system("clear");	
+
+	//Creating PDF hash to insert in memory file
+	MessageDigest hashCreator(MessageDigest::SHA256);
+	ByteArray pdf;
+
+	while(true){
+		cout << "Type ESC to quit" << endl;
+		cout << "Provide PDF file path: ";
+		getline(cin, in); 
+		if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+			return;
+		}
+		try
+		{	
+			pdf = fileReader(in);
+			path = in;
+			break;		
+		}
+		catch(runtime_error)
+		{
+			cout << "File not Found." << endl;
+		}
+	}
+
+	ByteArray hash = hashCreator.doFinal(pdf);
+
+	fileBuilder << "Hash:" << endl << hash.toString() << endl;
+
+	vector<string> names;
+	pair<vector<string>, vector<int> > titleCount;
+	int freeSigners = 0;
+	bool approval  = false;
+
+
+	while (true)
+	{
+		system("clear");
+		if (!names.empty())
+		{
+			cout << "Names already on the list: " << endl;
+			for (size_t i = 0; i < names.size(); i++)
+			{
+				cout << "\t" << names.at(i) << endl;
+			}
+		}
+		if(!titleCount.first.empty()){
+			cout << "Titles already on the list: " << endl;
+			for (size_t i = 0; i < titleCount.first.size(); i++)
+			{
+				cout << "\t" << titleCount.second.at(i) << " of " << titleCount.first.at(i) << endl;
+			}
+		}
+		if (freeSigners > 0)
+		{
+			cout << "There are " << freeSigners << " signature fields that anyone can sign" << endl;
+		}
+		if (!names.empty() || !titleCount.first.empty() || freeSigners > 0)
+		{
+			cout << endl;
+		}
+		
+		
+		cout << "Type ESC to quit" << endl;
+		cout << "Specify Signer by" << endl << "1-Full Name" << endl <<"2-Title" << endl << "3-Not Specific" << endl << "4-Finish and Save" << endl << "->";
+		getline(cin, in);
+		if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+			return;
+		}
+		if (in == "1")
+		{
+			while (true)
+			{
+				cout << "Full Name: ";
+				getline(cin, in);
+				if(!in.empty()){
+					string name = in;
+					if(find(names.begin(), names.end(), name) != names.end() && !names.empty()){
+						cout << "Name already on the list" << endl << "Press enter to continue" << endl;
+						getline(cin, in);
+					}
+					else{
+						while (true)
+						{
+							cout << "You typed: " << name << endl << "Are you sure (y or n)? ";
+							getline(cin, in);
+							if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
+								names.push_back(name);
+								break;
+							}
+							else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
+								cout << "Type the correct name: ";
+								getline(cin, name);
+								if(find(names.begin(), names.end(), name) != names.end() && !names.empty()){
+									cout << "Name already on the list" << endl << "Press enter to continue" << endl;
+									getline(cin, in);
+									break;
+								}
+							}
+							else{
+								cout << "Not an Option. The name is correct (y or n)?" << endl;
+							}
+						}
+					}
+					break;									
+				}
+				else{
+					cout << "Please type the person's Full Name" << endl;
+				}
+			}			
+		}
+		else if(in == "2"){
+			while (true)
+			{
+				cout << "Job Title: ";
+				getline(cin, in);
+				if(!in.empty()){
+					string title = in;
+					while (true)
+					{
+						cout << "You typed: " << title << endl << "Are you sure (y or n)? ";
+						getline(cin, in);
+						if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
+							while (true)
+							{
+								cout << "How many of this title has to sign de document?" << endl << "-> ";
+								getline(cin, in);
+
+								istringstream converter(in);
+								int number;
+								converter >> number;
+
+								if(converter.fail()){
+									cout << "Not a number" << endl;			
+								}
+								else if(number <= 0){
+									cout << "Please type a number bigger than 0" << endl;
+								}
+								else{
+									while (true)
+									{
+										cout << number << " " << title << " are needed to sign this document (y or n)? ";
+										getline(cin, in);
+										if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
+											titleCount.first.push_back(title);
+											titleCount.second.push_back(number);
+											break;
+										}
+										else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
+											while (true)
+											{
+												cout << "Type the correct quantity: ";
+												getline(cin, in);
+												istringstream converterCorrection(in);
+												int correctNumber;
+												converterCorrection >> correctNumber;					
+												if(converterCorrection.fail()){
+													cout << "Not a number" << endl;			
+												}
+												else{
+													number = correctNumber;
+													break;
+												}											
+											}											
+										}
+										else{
+											cout << "Not an Option. The name is correct (y or n)?" << endl;
+										}
+									}
+									break;						
+								}
+							}
+							break;												
+						}
+						else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
+							cout << "Type the correct job title: ";
+							getline(cin, title);
+						}
+						else{
+							cout << "Not an Option. The job title is correct (y or n)?" << endl;
+						}						
+					}					
+					break;
+				}
+				else{
+					cout << "Please type the person's Job Title" << endl;
+				}
+			}
+		}
+		else if(in == "3"){			
+			while (true)
+			{
+				cout << "How many signature spaces could have anyone's signature?" << endl << "-> ";
+				getline(cin, in);
+
+				istringstream converterFree(in);
+				int numberFree;
+				converterFree >> numberFree;
+
+				if(converterFree.fail()){
+					cout << "Not a number" << endl;			
+				}
+				else if(numberFree <= 0){
+					cout << "Please type a number bigger than 0" << endl;
+				}
+				else{
+					while (true)
+					{
+						cout << numberFree << " signature spaces are free for anyone to sign(y or n)? ";
+						getline(cin, in);
+						if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
+							freeSigners += numberFree;
+							break;
+						}
+						else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
+							while (true)
+							{
+								cout << "Type the correct quantity: ";
+								getline(cin, in);
+								istringstream freeCorrection(in);
+								int freeCorrectNumber;
+								freeCorrection >> freeCorrectNumber;					
+								if(freeCorrection.fail()){
+									cout << "Not a number" << endl;			
+								}
+								else{
+									numberFree = freeCorrectNumber;
+									break;
+								}											
+							}											
+						}
+						else{
+							cout << "Not an Option. The name is correct (y or n)?" << endl;
+						}
+					}
+					break;						
+				}
+			}
+		}
+		else if(in == "4"){
+			while (true)
+			{
+				cout << "Are you sure you want to finish (y or n)? ";
+				getline(cin, in);
+				if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
+					while(true){
+						cout << "This document needs approval or only signatures: " << endl << "1-Approval" << endl << "2-Signatures" << endl << "-> ";
+						getline(cin, in);
+						if(in == "1"){
+							approval = true;
+							break;
+						}  
+						else if(in == "2"){
+							approval = false;
+							break;
+						}
+						else{
+							cout << "Not a option, please chose a number" << endl;
+						}
+					}
+					break;
+				}
+				else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
+					break;
+				}
+				else{
+					cout << "Not an option (y or n)" << endl;
+				}
+			}
+			if (lowerCase(in) == "y" || lowerCase(in) == "yes" || in == "1" || in == "2")
+			{
+				break;
+			}
+		}
+		else{
+			cout << "Not an option, please chose a number" << endl << "Press enter to continue" << endl;
+			getline(cin, in);
+		}				
+	}
+
+	fileBuilder << "nameSigners:" << names.size() << endl;
+	if(!names.empty()){
+		for (size_t i = 0; i < names.size(); i++)
+		{
+			fileBuilder << names.at(i) << endl;
+		}
+	}
+
+	fileBuilder << "titleSigners:" << titleCount.first.size() << endl;
+	if(!titleCount.first.empty()){
+		for (size_t i = 0; i < titleCount.first.size(); i++)
+		{
+			fileBuilder << titleCount.first.at(i) << "\t" << titleCount.second.at(i) << endl;
+		}
+	}
+
+	fileBuilder << "freeSigners:" << freeSigners << endl;
+
+	fileBuilder << "needApproval:" << approval << endl;
+
+	fileBuilder << "signatures:0" << endl;
+
+	ByteArray out(&fileBuilder);
+
+	creatingMemoryFile(out, hash.toHex());
+}
+
 void signDocument(){
 	MessageDigest::loadMessageDigestAlgorithms();
 	SymmetricCipher::loadSymmetricCiphersAlgorithms();
@@ -344,9 +708,6 @@ void signDocument(){
 		pair<vector<string>, vector<int> > titleCount;
 		int posStart, posTerm, posSeparator, posEnd, number, freeSigners;
 		bool approval = false;
-
-		cout << fileBuilder.str() << endl;
-		getline(cin, in);
 
 		posTerm = fileBuilder.str().find("nameSigners:");
 		posSeparator = fileBuilder.str().find(":", posTerm+1);
@@ -766,19 +1127,28 @@ void signDocument(){
 	}
 }
 
-void includeDocument(){
-	string in, path;
-	ostringstream fileBuilder;
+string hexToChar(const string &hex) {
+    string result;
+    for (size_t i = 0; i < hex.length(); i += 2) {
+        string hexByte = hex.substr(i, 2);
+        char c = (char) (int) strtol(hexByte.c_str(), NULL, 16);
+        result += c;
+    }
+    return result;
+}
 
-	system("clear");	
+void verify(){
+	MessageDigest::loadMessageDigestAlgorithms();
+	SymmetricCipher::loadSymmetricCiphersAlgorithms();
 
 	//Creating PDF hash to insert in memory file
 	MessageDigest hashCreator(MessageDigest::SHA256);
 	ByteArray pdf;
+	string in, path;
 
 	while(true){
 		cout << "Type ESC to quit" << endl;
-		cout << "Provide PDF file path: ";
+		cout << "Provide original PDF file path: ";
 		getline(cin, in); 
 		if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
 			return;
@@ -791,290 +1161,96 @@ void includeDocument(){
 		}
 		catch(runtime_error)
 		{
-			cout << "File not Found." << endl;
+			cout << "File not Found" << endl;
 		}
 	}
 
 	ByteArray hash = hashCreator.doFinal(pdf);
-
-	fileBuilder << "Hash:" << endl << hash.toString() << endl;
-
-	vector<string> names;
-	pair<vector<string>, vector<int> > titleCount;
-	int freeSigners = 0;
-	bool approval  = false;
-
-
-	while (true)
+	ByteArray memoryFile;
+	try
+	{	
+		memoryFile = openMemoryFile(hash.toHex(), 2);
+	}
+	catch(runtime_error)
 	{
-		system("clear");
-		if (!names.empty())
-		{
-			cout << "Names already on the list: " << endl;
-			for (size_t i = 0; i < names.size(); i++)
-			{
-				cout << "\t" << names.at(i) << endl;
-			}
-		}
-		if(!titleCount.first.empty()){
-			cout << "Titles already on the list: " << endl;
-			for (size_t i = 0; i < titleCount.first.size(); i++)
-			{
-				cout << "\t" << titleCount.second.at(i) << " of " << titleCount.first.at(i) << endl;
-			}
-		}
-		if (freeSigners > 0)
-		{
-			cout << "There are " << freeSigners << " signature fields that anyone can sign" << endl;
-		}
-		if (!names.empty() || !titleCount.first.empty() || freeSigners > 0)
-		{
-			cout << endl;
-		}
-		
-		
-		cout << "Type ESC to quit" << endl;
-		cout << "Specify Signer by" << endl << "1-Full Name" << endl <<"2-Title" << endl << "3-Not Specific" << endl << "4-Finish and Save" << endl << "->";
+		cout << "Document not registered"  << endl << "Press enter to continue" << endl;
 		getline(cin, in);
-		if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
-			return;
-		}
-		if (in == "1")
-		{
-			while (true)
-			{
-				cout << "Full Name: ";
-				getline(cin, in);
-				if(!in.empty()){
-					string name = in;
-					if(find(names.begin(), names.end(), name) != names.end() && !names.empty()){
-						cout << "Name already on the list" << endl << "Press enter to continue" << endl;
-						getline(cin, in);
-					}
-					else{
-						while (true)
-						{
-							cout << "You typed: " << name << endl << "Are you sure (y or n)? ";
-							getline(cin, in);
-							if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
-								names.push_back(name);
-								break;
-							}
-							else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
-								cout << "Type the correct name: ";
-								getline(cin, name);
-								if(find(names.begin(), names.end(), name) != names.end() && !names.empty()){
-									cout << "Name already on the list" << endl << "Press enter to continue" << endl;
-									getline(cin, in);
-									break;
-								}
-							}
-							else{
-								cout << "Not an Option. The name is correct (y or n)?" << endl;
-							}
-						}
-					}
-					break;									
-				}
-				else{
-					cout << "Please type the person's Full Name" << endl;
-				}
-			}			
-		}
-		else if(in == "2"){
-			while (true)
-			{
-				cout << "Job Title: ";
-				getline(cin, in);
-				if(!in.empty()){
-					string title = in;
-					while (true)
-					{
-						cout << "You typed: " << title << endl << "Are you sure (y or n)? ";
-						getline(cin, in);
-						if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
-							while (true)
-							{
-								cout << "How many of this title has to sign de document?" << endl << "-> ";
-								getline(cin, in);
+		return;
+	}
 
-								istringstream converter(in);
-								int number;
-								converter >> number;
+	ostringstream fileBuilder;
+	fileBuilder << memoryFile.toString();
 
-								if(converter.fail()){
-									cout << "Not a number" << endl;			
-								}
-								else if(number <= 0){
-									cout << "Please type a number bigger than 0" << endl;
-								}
-								else{
-									while (true)
-									{
-										cout << number << " " << title << " are needed to sign this document (y or n)? ";
-										getline(cin, in);
-										if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
-											titleCount.first.push_back(title);
-											titleCount.second.push_back(number);
-											break;
-										}
-										else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
-											while (true)
-											{
-												cout << "Type the correct quantity: ";
-												getline(cin, in);
-												istringstream converterCorrection(in);
-												int correctNumber;
-												converterCorrection >> correctNumber;					
-												if(converterCorrection.fail()){
-													cout << "Not a number" << endl;			
-												}
-												else{
-													number = correctNumber;
-													break;
-												}											
-											}											
-										}
-										else{
-											cout << "Not an Option. The name is correct (y or n)?" << endl;
-										}
-									}
-									break;						
-								}
-							}
-							break;												
-						}
-						else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
-							cout << "Type the correct job title: ";
-							getline(cin, title);
-						}
-						else{
-							cout << "Not an Option. The job title is correct (y or n)?" << endl;
-						}						
-					}					
-					break;
-				}
-				else{
-					cout << "Please type the person's Job Title" << endl;
-				}
-			}
+	vector<string> names, titles, approvals, signatures, pubKeys;
+	vector<time_t> dates;
+
+	int posStart, posTerm, posSeparator, posEnd, number;
+
+	posTerm = fileBuilder.str().find("signatures:");
+	posSeparator = fileBuilder.str().find(":", posTerm+1);
+	posEnd = fileBuilder.str().find("\n", posSeparator);
+	number = atoi(fileBuilder.str().substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+
+	for (int i = 0; i < number; i++)
+	{
+		posStart = posEnd+1;
+		posEnd = fileBuilder.str().find("\t", posStart);
+		names.push_back(fileBuilder.str().substr(posStart, posEnd-posStart));
+
+		posStart = posEnd+1;
+		posEnd = fileBuilder.str().find("\t", posStart);
+		titles.push_back(fileBuilder.str().substr(posStart, posEnd-posStart));
+
+		posStart = posEnd+1;
+		posEnd = fileBuilder.str().find("\t", posStart);
+		signatures.push_back(hexToChar(fileBuilder.str().substr(posStart, posEnd-posStart)));
+
+		posStart = posEnd+1;
+		posEnd = fileBuilder.str().find("\t", posStart);
+		approvals.push_back(fileBuilder.str().substr(posStart, posEnd-posStart));
+
+		posStart = posEnd+1;
+		posEnd = fileBuilder.str().find("\t", posStart);
+		pubKeys.push_back(hexToChar(fileBuilder.str().substr(posStart, posEnd-posStart)));
+
+		posStart = posEnd+1;
+		posEnd = fileBuilder.str().find("\t", posStart);
+		dates.push_back(atoi(fileBuilder.str().substr(posStart, posEnd-posStart).c_str()));
+
+		posEnd = fileBuilder.str().find("\n", posStart);
+	}
+
+	cout << "The file " << getFileName(path) << " was signed by: " << endl; 
+	for (size_t i = 0; i < signatures.size(); i++)
+	{
+		char timeStr[80];
+		strftime(timeStr, sizeof(timeStr), "%H:%M %d-%m-%Y", localtime(&dates.at(i)));
+		cout << left << setw(40) << names.at(i) << "At " << setw(20) << timeStr;		
+
+		ByteArray sigArray(signatures.at(i));
+		ByteArray keyArray(pubKeys.at(i));
+		RSAPublicKey rsaPubKey(keyArray);
+
+
+		if(approvals.at(i) == "1"){
+			cout << setw(40) <<"The signer approved the document";
 		}
-		else if(in == "3"){			
-			while (true)
-			{
-				cout << "How many signature spaces could have anyone's signature?" << endl << "-> ";
-				getline(cin, in);
-
-				istringstream converterFree(in);
-				int numberFree;
-				converterFree >> numberFree;
-
-				if(converterFree.fail()){
-					cout << "Not a number" << endl;			
-				}
-				else if(numberFree <= 0){
-					cout << "Please type a number bigger than 0" << endl;
-				}
-				else{
-					while (true)
-					{
-						cout << numberFree << " signature spaces are free for anyone to sign(y or n)? ";
-						getline(cin, in);
-						if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
-							freeSigners += numberFree;
-							break;
-						}
-						else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
-							while (true)
-							{
-								cout << "Type the correct quantity: ";
-								getline(cin, in);
-								istringstream freeCorrection(in);
-								int freeCorrectNumber;
-								freeCorrection >> freeCorrectNumber;					
-								if(freeCorrection.fail()){
-									cout << "Not a number" << endl;			
-								}
-								else{
-									numberFree = freeCorrectNumber;
-									break;
-								}											
-							}											
-						}
-						else{
-							cout << "Not an Option. The name is correct (y or n)?" << endl;
-						}
-					}
-					break;						
-				}
-			}
+		else if(approvals.at(i) == "0"){
+			cout << setw(40) << "The signer disapproved the document";
 		}
-		else if(in == "4"){
-			while (true)
-			{
-				cout << "Are you sure you want to finish (y or n)? ";
-				getline(cin, in);
-				if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
-					while(true){
-						cout << "This document needs approval or only signatures: " << endl << "1-Approval" << endl << "2-Signatures" << endl << "-> ";
-						getline(cin, in);
-						if(in == "1"){
-							approval = true;
-							break;
-						}  
-						else if(in == "2"){
-							approval = false;
-							break;
-						}
-						else{
-							cout << "Not a option, please chose a number" << endl;
-						}
-					}
-					break;
-				}
-				else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
-					break;
-				}
-				else{
-					cout << "Not an option (y or n)" << endl;
-				}
-			}
-			if (lowerCase(in) == "y" || lowerCase(in) == "yes" || in == "1" || in == "2")
-			{
-				break;
-			}
+
+		Signer verification;
+		cout << "Signature: ";
+		if(verification.verify(rsaPubKey, sigArray, hash, MessageDigest::SHA256)){
+			cout << "Verified" << endl;
 		}
 		else{
-			cout << "Not an option, please chose a number" << endl << "Press enter to continue" << endl;
-			getline(cin, in);
-		}				
+			cout << "Invalid" << endl;
+		}		
 	}
-
-	fileBuilder << "nameSigners:" << names.size() << endl;
-	if(!names.empty()){
-		for (size_t i = 0; i < names.size(); i++)
-		{
-			fileBuilder << names.at(i) << endl;
-		}
-	}
-
-	fileBuilder << "titleSigners:" << titleCount.first.size() << endl;
-	if(!titleCount.first.empty()){
-		for (size_t i = 0; i < titleCount.first.size(); i++)
-		{
-			fileBuilder << titleCount.first.at(i) << "\t" << titleCount.second.at(i) << endl;
-		}
-	}
-
-	fileBuilder << "freeSigners:" << freeSigners << endl;
-
-	fileBuilder << "needApproval:" << approval << endl;
-
-	fileBuilder << "signatures:0" << endl;
-
-	ByteArray out(&fileBuilder);
-
-	creatingMemoryFile(out, hash.toHex());
+	cout << endl << "Press enter to leave!" << endl;
+	string teste;
+	getline(cin, teste);
 }
 
 int main(int argc, char **argv) {
@@ -1120,10 +1296,11 @@ int main(int argc, char **argv) {
 			signDocument();
 		}
 		else if(in == "4"){
-			
+			verify();
 		}
 		else{
-			cout << "Type function number ->";
+			cout << "Type function number"<< endl << "Press enter to continue" << endl;
+			getline(cin, in);
 		}
 	}
 
