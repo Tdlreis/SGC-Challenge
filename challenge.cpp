@@ -12,22 +12,101 @@
 #include <libcryptosec/Pkcs12Builder.h>
 #include <libcryptosec/Pkcs12Factory.h>
 #include <libcryptosec/Signer.h>
-#include <libcryptosec/Pkcs7SignedDataBuilder.h>
-#include <libcryptosec/AsymmetricCipher.h>
+#include <libcryptosec/SymmetricKey.h>
+
+#include <libcryptosec/Base64.h>
 
 #include <sys/stat.h>
 
+#include <openssl/evp.h>
 
-string pemPub = "-----BEGIN PUBLIC KEY-----" "\n"
-				"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnW/a1EB0LmwogOb59IabbQBdwIya/Ky6KmNfXoT3tbOlFPuCo9pt95obvI7+ydUtv3veLIIIDHNTpcjIIEIk38YFeYQkD+1Y7MVljZt0JqGFFNYuOrwKH024i8DtroKAwQKSmR3ZqbhkPH5GA7c+OM2fN2sbTTakS7FZh60NLhr4YAq5YE9d+CkDveXr2lvu9d1bR6X0NHTKNQZe9wN2Jy7ZUuj73Y/DCtjSuS/mYtLPacdYlYDfxv9x2Y8CcyQvT3r4DMFiJP03YcdmaSQA3EZ0HTuw8XsPexJiFtZdRnpuCTnBqZ/jH4oVBJGXJIDHtuICcdUrj9IQafiRljbfzQIDAQAB" "\n"
-				"-----END PUBLIC KEY-----" "\n";
-RSAPublicKey sysPubKey(pemPub);
-string pemPriv = "-----BEGIN RSA PRIVATE KEY-----" "\n"
-				"MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCdb9rUQHQubCiA5vn0hpttAF3AjJr8rLoqY19ehPe1s6UU+4Kj2m33mhu8jv7J1S2/e94sgggMc1OlyMggQiTfxgV5hCQP7VjsxWWNm3QmoYUU1i46vAofTbiLwO2ugoDBApKZHdmpuGQ8fkYDtz44zZ83axtNNqRLsVmHrQ0uGvhgCrlgT134KQO95evaW+713VtHpfQ0dMo1Bl73A3YnLtlS6Pvdj8MK2NK5L+Zi0s9px1iVgN/G/3HZjwJzJC9PevgMwWIk/Tdhx2ZpJADcRnQdO7Dxew97EmIW1l1Gem4JOcGpn+MfihUEkZckgMe24gJx1SuP0hBp+JGWNt/NAgMBAAECggEALMENTeT8oe2xHeOLDo3tRPEjtYbC0C0xxrb092OJHyfwN6S/oGCJfida1yE3IJzvIk3N/I0CSLfIAYqwCSuEW/BowgBkV/q6mqQKmFSmkgy8Tg4Mmjm2DuwDGAdCCaejfjqC/e/UXkDCjce/k3LVx0P8jL5vxmVQEwxZTQ5OftpNYLCmn51JORTs0/GpDUqYryEtgkbX37N4KS3OVTgAiayJDmlYXO1lEdmGV5zykgZQeXX+7KZ9MJ1F5YFDTRwRtb+vMv5P2lFLTFB7YUvld9b9GUCKpKrvmOisu9LtlQ7JmNnAD8i8JbTKoxoXGt4rIGN8D6wzgtNGgUy4OGO0wQKBgQDY/jSEm91uVZ+q3EetNGyX+V6ZelHU74YOxJa8sWDiwD3fx21BQ860u/g55B/NKgsU7nIn7/95e8V9orSn74sJcOwiy3MD3yMYQm4Sg7sz349yNRQdCtQ9TJkFVoULDOUTT4UIi+QChGDANaL4F2jXGgMFfew5BqA4XzlS2AR25QKBgQC5vPDmr48/mqWgw4SeBuz6BD9DeOW4/8ujjEa/HVdN7kArYpx6O5Mh8OgDwFLEyDMRhajlhx4pitCNJN0JKRtZWMDyvAzIgwMvj/m4WRDfn7wwUlMcjhvPhJK7znnPp8+Ut/S+s5XXqw+aVzVGrnsm6SByAzbRE1a1DH02CxEOyQKBgQCe0L7jZ6iTPnvT89FKBZqNSGhicFJAROabHGsuw6wjiYw/ophmMhix0vmEdWCJKoJd2X8Xl+Ilqd8LavBKEVpzmIBbnwgZB1GKSeSCDIQRHUjBz/NepjRcgRll/ML3KYLntUWq0agZ54VgaGFUrt1+wX0Aof8oZZ8SYy9zYMMzuQKBgAndkEogfxJYy31bhTrDkWjCOv4BeOo3pABe3g8eptl70yq6xSb07R67Zgd0+rB7FcNTfyIZ6C86sVMd5yOqbEp1nWIHPQKVeuDW2+O/z1ahbGSAqut0XOPL3eNd1ziBaFQ05SoP7eCTtHN1OF41vFLXxSJpK0s1pMBfFnN9aP2JAoGBAKqDlBBZ9gsVp7wEmuMP/3LqeG1npdwkGjtIp0GeuEaKFB8HlCGYh0YldFtWih4xGYI8u5DEUxSBR1cXX9qXvxal7f9O6MzZjhC/QLSMw+vCUZ0wjhb6ojWIdvidxs8JjDH+R4m0pgFp9ZOaH5LHRo7Chr1ijEhn5HZ+Is5hQRJr" "\n"
-				"-----END RSA PRIVATE KEY-----" "\n";
-RSAPrivateKey sysPrivKey(pemPriv);
+string sysKeyString = "q3t6w9z$C&F)J@NcQfTjWnZr4u7x!A%D";
+ByteArray sysKeyBa(sysKeyString);
+SymmetricKey sysKey = SymmetricKey(sysKeyBa, SymmetricKey::AES_256);
+
 
 //Utility Functions
+ByteArray encryptData(ByteArray data)
+{	
+	OpenSSL_add_all_algorithms();
+
+	Base64 converter;
+	data = ByteArray(converter.encode(data));
+	ofstream debugFile(string("./documents/inprocess/e.txt").c_str());
+	debugFile << data.toString() << endl;
+	
+
+    unsigned char key[EVP_MAX_KEY_LENGTH], iv[EVP_MAX_IV_LENGTH];
+    EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha256(), NULL, reinterpret_cast<const unsigned char*>(sysKey.getEncoded().toString().c_str()), sysKey.getEncoded().toString().size(), 1, key, iv);
+
+
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv);
+
+    int out_len = data.toString().size();
+    unsigned char outbuf[out_len];
+    EVP_EncryptUpdate(ctx, outbuf, &out_len, reinterpret_cast<const unsigned char*>(data.toString().c_str()), data.toString().size());
+	ostringstream out;
+    out.write(reinterpret_cast<const char*>(outbuf), out_len);
+
+    // Step 7: Finalize encryption and write any remaining data
+    EVP_EncryptFinal_ex(ctx, outbuf, &out_len);
+    out.write(reinterpret_cast<const char*>(outbuf), out_len);
+
+    // Step 8: Clean up
+    EVP_CIPHER_CTX_free(ctx);
+
+	debugFile << out.str() << endl;
+
+
+	ByteArray outArray((const unsigned char *)out.str().c_str(), out.str().size()+3);
+	debugFile << outArray.toString() << endl;
+	debugFile.close();
+
+	return outArray;
+}
+
+ByteArray decryptData(ByteArray data) {
+	ofstream debugFile(string("./documents/inprocess/d.txt").c_str());
+	debugFile << data.toString() << endl;
+
+    unsigned char key[EVP_MAX_KEY_LENGTH], iv[EVP_MAX_IV_LENGTH];
+	EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha256(), NULL, reinterpret_cast<const unsigned char*>(sysKey.getEncoded().toString().c_str()), sysKey.getEncoded().toString().size(), 1, key, iv);
+
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    EVP_CIPHER_CTX_init(ctx);
+    EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv);
+
+
+    unsigned char out_buf[data.toString().size() + EVP_MAX_BLOCK_LENGTH];
+    int out_len;
+    
+    if (!EVP_DecryptUpdate(ctx, out_buf, &out_len, reinterpret_cast<const unsigned char*>(data.toString().c_str()),  data.toString().size())) {
+        EVP_CIPHER_CTX_cleanup(ctx);
+        throw runtime_error("Error Decrypting");
+    }
+	ostringstream out;
+	out.write(reinterpret_cast<const char*>(out_buf), out_len);
+
+
+    if (EVP_DecryptFinal_ex(ctx, out_buf, &out_len)) {
+    	out.write(reinterpret_cast<const char*>(out_buf), out_len);
+    }
+
+    EVP_CIPHER_CTX_cleanup(ctx);
+
+	
+	debugFile << out.str();
+	debugFile.close();
+
+
+	Base64 converter;
+	string outString = out.str();
+	ByteArray outByteArray = converter.decode(outString);
+
+	return outByteArray;
+}
+
 string getFileName(string path){
 	int pos = path.find_last_of("/");
 	string fileName = path.substr(pos+1);
@@ -66,9 +145,11 @@ void creatingMemoryFile(ByteArray out, string name){
 	debugFile << out.toString();
 	debugFile.close();
 
-	AsymmetricCipher protectedMemory;
-	ByteArray encryptedOut = protectedMemory.encrypt(sysPubKey, out, AsymmetricCipher::PKCS1_OAEP);
-	// fileWriter(encryptedOut, name);	
+	ByteArray encryptedOut = encryptData(out);
+
+	ofstream debugFile2(string("./documents/inprocess/a.txt").c_str());
+	debugFile2 << encryptedOut.toString();
+	debugFile2.close();
 
 	ofstream outputFile(string("./documents/inprocess/" + name + ".bin").c_str(), ios::binary);
 	for (size_t i = 0; i <encryptedOut.size(); i++)
@@ -79,14 +160,14 @@ void creatingMemoryFile(ByteArray out, string name){
 }
 
 void upgradeMemoryFile(string name){
-	ifstream inprocessFile(string("./documents/inprocess"+name+".bin").c_str(), ios::binary);
-    ofstream finalFile(string("./documents/final"+name+".bin").c_str(), ios::binary);
+	ifstream inprocessFile(string("./documents/inprocess/"+name+".bin").c_str(), ios::binary);
+    ofstream finalFile(string("./documents/final/"+name+".bin").c_str(), ios::binary);
 
 	finalFile << inprocessFile.rdbuf();
 	inprocessFile.close();
     finalFile.close();
 
-    remove(string("./documents/inprocess"+name+".bin").c_str());
+    remove(string("./documents/inprocess/"+name+".bin").c_str());
 }
 
 ByteArray openMemoryFile(string name, int place){
@@ -97,8 +178,8 @@ ByteArray openMemoryFile(string name, int place){
 	else if(place == 2){
 		fileData = fileReader(string("./documents/final/"+name+".bin"));
 	}
-	AsymmetricCipher protectedMemory;
-	ByteArray decryptedData = protectedMemory.decrypt(sysPrivKey, fileData, AsymmetricCipher::PKCS1_OAEP);
+	ByteArray decryptedData = decryptData(fileData);
+
 	return decryptedData;
 }
 
@@ -164,9 +245,13 @@ void createKeysAndCertificate(){
 	certBuilder.setPublicKey(*pubKey);
 
 	time_t now = time(0);
+	tm* brasilia_time = gmtime(&now);
+	brasilia_time->tm_hour -= 3;
+	time_t brasilia_time_t = mktime(brasilia_time);
+	
 
-	DateTime dateTimeNow(now);
-	DateTime dateTimeExpire(now+60*60*24*365);
+	DateTime dateTimeNow(brasilia_time_t);
+	DateTime dateTimeExpire(brasilia_time_t+60*60*24*365);
 
 	certBuilder.setNotBefore(dateTimeNow);
 	certBuilder.setNotAfter(dateTimeExpire);
@@ -255,10 +340,13 @@ void signDocument(){
 	
 	while (true)
 	{
-		vector<string> names;
+		vector<string> names, signatures;
 		pair<vector<string>, vector<int> > titleCount;
 		int posStart, posTerm, posSeparator, posEnd, number, freeSigners;
 		bool approval = false;
+
+		cout << fileBuilder.str() << endl;
+		getline(cin, in);
 
 		posTerm = fileBuilder.str().find("nameSigners:");
 		posSeparator = fileBuilder.str().find(":", posTerm+1);
@@ -300,7 +388,19 @@ void signDocument(){
 		number = atoi(fileBuilder.str().substr(posSeparator+1, posEnd-posSeparator-1).c_str());
 		approval = (number != 0);
 
+		posTerm = fileBuilder.str().find("signatures:");
+		posSeparator = fileBuilder.str().find(":", posTerm+1);
+		posEnd = fileBuilder.str().find("\n", posSeparator);
+		number = atoi(fileBuilder.str().substr(posSeparator+1, posEnd-posSeparator-1).c_str());
 
+		for (int i = 0; i < number; i++)
+		{
+			posStart = posEnd+1;
+			posEnd = fileBuilder.str().find("\t", posStart);
+			signatures.push_back(fileBuilder.str().substr(posStart, posEnd-posStart));
+			posEnd = fileBuilder.str().find("\n", posStart);
+		}
+	
 		system("clear");
 		cout  << "This document needs to be sign by: " << endl;
 		if (!names.empty())
@@ -325,10 +425,17 @@ void signDocument(){
 		{
 			cout << endl;
 		}
+		if(names.empty() && titleCount.first.empty() && freeSigners == 0){
+			upgradeMemoryFile(hash.toHex());
+			cout << "Document fully signed" << endl << "Press enter to continue" << endl;
+			getline(cin, in);
+			break;
+		}
 
 		cout << "Type ESC to quit" << endl;
 		cout << "Type your full name: ";
 		getline(cin, in);
+
 		if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
 			return;
 		}
@@ -355,7 +462,13 @@ void signDocument(){
 					pubKeyDer =  p12.getCertificate(in)->getPublicKey()->getDerEncoded();
 
 					int category = 0;
-					if(find(names.begin(), names.end(), name) != names.end() && !names.empty()){
+
+					if(find(signatures.begin(), signatures.end(), name) != signatures.end()){
+						cout << "You have already signed this document" << endl << "Press enter to continue" << endl;
+						getline(cin, in);
+						break;
+					}
+					else if(find(names.begin(), names.end(), name) != names.end() && !names.empty()){
 						category = 1;
 					}
 					else if(find(titleCount.first.begin(), titleCount.first.end(), title) != titleCount.first.end() && !titleCount.first.empty()){
@@ -365,7 +478,8 @@ void signDocument(){
 						category = 3;
 					}
 					else{
-						cout << "You are can't sign this document" << endl;
+						cout << "You can't sign this document" << endl<< "Press enter to continue" << endl;
+						getline(cin, in);
 						break;
 					}
 					if(approval){
@@ -384,7 +498,6 @@ void signDocument(){
 							}
 							if (in == "1")
 							{
-								cout << fileBuilder.str() << endl;
 								accept = true;
 								if(category == 1){
 									string editor = fileBuilder.str();
@@ -403,16 +516,7 @@ void signDocument(){
 									fileBuilder << editor;
 								}
 								else if(category == 2){	
-									string editor = fileBuilder.str();
-
-									posTerm = editor.find("titleSigners:");
-									posSeparator = editor.find(":", posTerm+1);
-									posEnd = editor.find("\n", posSeparator);
-									int editNumber = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
-									editNumber--;
-									stringstream intToString;
-									intToString << editNumber;
-									editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
+									string editor = fileBuilder.str();									
 
 									int posStartTitle = editor.find(title);
 									int posEndTitle = editor.find("\t", posStartTitle);
@@ -423,10 +527,18 @@ void signDocument(){
 									titleNumber--;
 									if(titleNumber == 0){
 										editor.erase(posStartTitle-1, posEnd-posStartTitle+1);
+										posTerm = editor.find("titleSigners:");
+										posSeparator = editor.find(":", posTerm+1);
+										posEnd = editor.find("\n", posSeparator);
+										int editNumber = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+										editNumber--;
+										stringstream intToString;
+										intToString << editNumber;
+										editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
 									}
 									else{
-										intToString.str("");
-										intToString << editNumber;
+										stringstream intToString;
+										intToString << titleNumber;
 										editor.replace(posStart, posEnd-posStart, intToString.str());
 									}
 									fileBuilder.str("");
@@ -445,9 +557,24 @@ void signDocument(){
 									fileBuilder.str("");
 									fileBuilder << editor;
 								}
-								fileBuilder << name << "\t" << title << "\t" << signature.toStream() << "\t" << accept << "\t" << pubKeyDer.toStream() << "\t" << "day" << endl;
+								time_t now = time(0);
+								tm* brasilia_time = gmtime(&now);
+								brasilia_time->tm_hour -= 3;
+								time_t brasilia_time_t = mktime(brasilia_time);
 
-								cout << fileBuilder.str() << endl;
+								fileBuilder << name << "\t" << title << "\t" << signature.toHex() << "\t" << accept << "\t" << pubKeyDer.toHex() << "\t" << brasilia_time_t << endl;
+
+								string editor = fileBuilder.str();
+								posTerm = editor.find("signatures:");
+								posSeparator = editor.find(":", posTerm+1);
+								posEnd = editor.find("\n", posSeparator);
+								int editNumber = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+								editNumber++;
+								stringstream intToString;
+								intToString << editNumber;
+								editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
+								fileBuilder.str("");
+								fileBuilder << editor;
 
 								ByteArray out(&fileBuilder);
 								creatingMemoryFile(out, hash.toHex());
@@ -472,7 +599,8 @@ void signDocument(){
 									fileBuilder << editor;
 								}
 								else if(category == 2){	
-									string editor = fileBuilder.str();
+									string editor = fileBuilder.str();									
+
 									int posStartTitle = editor.find(title);
 									int posEndTitle = editor.find("\t", posStartTitle);
 
@@ -481,10 +609,20 @@ void signDocument(){
 									int titleNumber = atoi(editor.substr(posStart, posEnd-posStart).c_str());
 									titleNumber--;
 									if(titleNumber == 0){
-										editor.erase(posStartTitle, posEnd);
+										editor.erase(posStartTitle-1, posEnd-posStartTitle+1);
+										posTerm = editor.find("titleSigners:");
+										posSeparator = editor.find(":", posTerm+1);
+										posEnd = editor.find("\n", posSeparator);
+										int editNumber = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+										editNumber--;
+										stringstream intToString;
+										intToString << editNumber;
+										editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
 									}
 									else{
-										editor.replace(posStart, posEnd-posStart, string("" + titleNumber).c_str());
+										stringstream intToString;
+										intToString << titleNumber;
+										editor.replace(posStart, posEnd-posStart, intToString.str());
 									}
 									fileBuilder.str("");
 									fileBuilder << editor;
@@ -502,7 +640,24 @@ void signDocument(){
 									fileBuilder.str("");
 									fileBuilder << editor;
 								}
-								fileBuilder << name << "\t" << title << "\t" << signature.toString() << "\t" << accept << "\t" << pubKeyDer.toStream() << "\t" << "day" << endl;
+								time_t now = time(0);
+								tm* brasilia_time = gmtime(&now);
+								brasilia_time->tm_hour -= 3;
+								time_t brasilia_time_t = mktime(brasilia_time);
+								fileBuilder << name << "\t" << title << "\t" << signature.toHex() << "\t" << accept << "\t" << pubKeyDer.toHex() << "\t" << brasilia_time_t << endl;
+
+								string editor = fileBuilder.str();
+								posTerm = editor.find("signatures:");
+								posSeparator = editor.find(":", posTerm+1);
+								posEnd = editor.find("\n", posSeparator);
+								int editNumber = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+								editNumber++;
+								stringstream intToString;
+								intToString << editNumber;
+								editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
+								fileBuilder.str("");
+								fileBuilder << editor;
+
 								ByteArray out(&fileBuilder);
 								creatingMemoryFile(out, hash.toHex());
 								break;
@@ -514,53 +669,81 @@ void signDocument(){
 					}
 					else{
 						if(category == 1){
-									string editor = fileBuilder.str();
-									posTerm = editor.find("nameSigners:");
-									posSeparator = editor.find(":", posTerm+1);
-									posEnd = editor.find("\n", posSeparator);
-									int editNumber = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
-									editNumber--;
-									stringstream intToString;
-									intToString << editNumber;
-									editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
-									int posStartName = editor.find(name);
-									int posEndName = editor.find("\n", posStartName);							
-									editor.erase(posStartName, posEndName-posStartName+1);
-									fileBuilder.str("");
-									fileBuilder << editor;
-								}
-								else if(category == 2){	
-									string editor = fileBuilder.str();
-									int posStartTitle = editor.find(title);
-									int posEndTitle = editor.find("\t", posStartTitle);
+							string editor = fileBuilder.str();
+							posTerm = editor.find("nameSigners:");
+							posSeparator = editor.find(":", posTerm+1);
+							posEnd = editor.find("\n", posSeparator);
+							int editNumber = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+							editNumber--;
+							stringstream intToString;
+							intToString << editNumber;
+							editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
+							int posStartName = editor.find(name);
+							int posEndName = editor.find("\n", posStartName);							
+							editor.erase(posStartName, posEndName-posStartName+1);
+							fileBuilder.str("");
+							fileBuilder << editor;
+						}
+						else if(category == 2){	
+							string editor = fileBuilder.str();									
 
-									posStart = posEndTitle+1;
-									posEnd = editor.find("\n", posStart);
-									int titleNumber = atoi(editor.substr(posStart, posEnd-posStart).c_str());
-									titleNumber--;
-									if(titleNumber == 0){
-										editor.erase(posStartTitle, posEnd);
-									}
-									else{
-										editor.replace(posStart, posEnd-posStart, string("" + titleNumber).c_str());
-									}
-									fileBuilder.str("");
-									fileBuilder << editor;
-								}
-								else{
-									string editor = fileBuilder.str();
-									posTerm = editor.find("freeSigners:");
-									posSeparator = editor.find(":", posTerm+1);
-									posEnd = editor.find("\n", posSeparator);
-									freeSigners = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
-									freeSigners--;
-									stringstream intToString;
-									intToString << freeSigners;
-									editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
-									fileBuilder.str("");
-									fileBuilder << editor;
-								}
-						fileBuilder << name << "\t" << title << "\t" << signature.toString() << "\t" << "n/a" << "\t" << pubKeyDer.toStream() << "\t" << "day" << endl;
+							int posStartTitle = editor.find(title);
+							int posEndTitle = editor.find("\t", posStartTitle);
+
+							posStart = posEndTitle+1;
+							posEnd = editor.find("\n", posStart);
+							int titleNumber = atoi(editor.substr(posStart, posEnd-posStart).c_str());
+							titleNumber--;
+							if(titleNumber == 0){
+								editor.erase(posStartTitle-1, posEnd-posStartTitle+1);
+								posTerm = editor.find("titleSigners:");
+								posSeparator = editor.find(":", posTerm+1);
+								posEnd = editor.find("\n", posSeparator);
+								int editNumber = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+								editNumber--;
+								stringstream intToString;
+								intToString << editNumber;
+								editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
+							}
+							else{
+								stringstream intToString;
+								intToString << titleNumber;
+								editor.replace(posStart, posEnd-posStart, intToString.str());
+							}
+							fileBuilder.str("");
+							fileBuilder << editor;
+						}
+						else{
+							string editor = fileBuilder.str();
+							posTerm = editor.find("freeSigners:");
+							posSeparator = editor.find(":", posTerm+1);
+							posEnd = editor.find("\n", posSeparator);
+							freeSigners = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+							freeSigners--;
+							stringstream intToString;
+							intToString << freeSigners;
+							editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
+							fileBuilder.str("");
+							fileBuilder << editor;
+						}
+						time_t now = time(0);
+						tm* brasilia_time = gmtime(&now);
+						brasilia_time->tm_hour -= 3;
+						time_t brasilia_time_t = mktime(brasilia_time);
+
+						fileBuilder << name << "\t" << title << "\t" << signature.toHex() << "\t" << "n/a" << "\t" << pubKeyDer.toHex() << "\t" << brasilia_time_t << endl;
+
+						string editor = fileBuilder.str();
+						posTerm = editor.find("signatures:");
+						posSeparator = editor.find(":", posTerm+1);
+						posEnd = editor.find("\n", posSeparator);
+						int editNumber = atoi(editor.substr(posSeparator+1, posEnd-posSeparator-1).c_str());
+						editNumber++;
+						stringstream intToString;
+						intToString << editNumber;
+						editor.replace(posSeparator+1, posEnd-posSeparator-1, intToString.str());
+						fileBuilder.str("");
+						fileBuilder << editor;
 
 						ByteArray out(&fileBuilder);
 						creatingMemoryFile(out, hash.toHex());
@@ -577,7 +760,7 @@ void signDocument(){
 		}
 		catch(runtime_error)
 		{
-			cout << "Certificate not found!" << endl << "Please check your speel or create certificate" << endl << "Press enter to continue" << endl;
+			cout << "Certificate not found!" << endl << "Please check your spelling or create certificate" << endl << "Press enter to continue" << endl;
 			getline(cin, in);;
 		}
 	}
@@ -619,7 +802,7 @@ void includeDocument(){
 	vector<string> names;
 	pair<vector<string>, vector<int> > titleCount;
 	int freeSigners = 0;
-	bool approval = false;
+	bool approval  = false;
 
 
 	while (true)
@@ -887,7 +1070,7 @@ void includeDocument(){
 
 	fileBuilder << "needApproval:" << approval << endl;
 
-	fileBuilder << "signatures:" << endl;
+	fileBuilder << "signatures:0" << endl;
 
 	ByteArray out(&fileBuilder);
 
