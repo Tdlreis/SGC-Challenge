@@ -763,6 +763,12 @@ void signDocument(){
 		}
 	
 		system("clear");
+		if(names.empty() && titleCount.first.empty() && freeSigners == 0){
+			upgradeMemoryFile(hash.toHex());
+			cout << "Document fully signed" << endl << "Press enter to continue" << endl;
+			getline(cin, in);
+			break;
+		}
 		cout  << "This document needs to be sign by: " << endl;
 		if (!names.empty())
 		{
@@ -786,12 +792,7 @@ void signDocument(){
 		{
 			cout << endl;
 		}
-		if(names.empty() && titleCount.first.empty() && freeSigners == 0){
-			upgradeMemoryFile(hash.toHex());
-			cout << "Document fully signed" << endl << "Press enter to continue" << endl;
-			getline(cin, in);
-			break;
-		}
+		
 
 		cout << "Type ESC to quit" << endl;
 		cout << "Type your full name: ";
@@ -1137,6 +1138,10 @@ string hexToChar(const string &hex) {
     return result;
 }
 
+bool comparePairs(const pair<string, int>& a, const pair<string, int>& b) {
+	return a.first < b.first;
+}
+
 void verify(){
 	MessageDigest::loadMessageDigestAlgorithms();
 	SymmetricCipher::loadSymmetricCiphersAlgorithms();
@@ -1173,7 +1178,7 @@ void verify(){
 	}
 	catch(runtime_error)
 	{
-		cout << "Document not registered"  << endl << "Press enter to continue" << endl;
+		cout << "Document not registered or not yet fully signed"  << endl << "Press enter to continue" << endl;
 		getline(cin, in);
 		return;
 	}
@@ -1220,23 +1225,46 @@ void verify(){
 		posEnd = fileBuilder.str().find("\n", posStart);
 	}
 
-	cout << "The file " << getFileName(path) << " was signed by: " << endl; 
+	vector<pair<string, int> > tempVector;
+	for (size_t i = 0; i < names.size(); i++) {
+		tempVector.push_back(make_pair(names.at(i), i));
+	}	
+
+	sort(tempVector.begin(), tempVector.end(), comparePairs);
+
+	vector<string> namesShow, titlesShow, approvalsShow, signaturesShow, pubKeysShow;
+	vector<time_t> datesShow;
+
+	for (size_t i = 0; i < tempVector.size(); i++) {
+		int originalIndex = tempVector.at(i).second;
+		namesShow.push_back(names.at(originalIndex));
+		titlesShow.push_back(titles.at(originalIndex));
+		approvalsShow.push_back(approvals.at(originalIndex));
+		signaturesShow.push_back(signatures.at(originalIndex));
+		pubKeysShow.push_back(pubKeys.at(originalIndex));
+		datesShow.push_back(dates.at(originalIndex));
+	}
+
+	cout << "The file " << getFileName(path) << " was signed by: " << endl << endl; 
 	for (size_t i = 0; i < signatures.size(); i++)
 	{
 		char timeStr[80];
-		strftime(timeStr, sizeof(timeStr), "%H:%M %d-%m-%Y", localtime(&dates.at(i)));
-		cout << left << setw(40) << names.at(i) << "At " << setw(20) << timeStr;		
+		strftime(timeStr, sizeof(timeStr), "%H:%M %d-%m-%Y", localtime(&datesShow.at(i)));
+		ostringstream formatting;
+		formatting << namesShow.at(i) << "-" << titlesShow.at(i);
 
-		ByteArray sigArray(signatures.at(i));
-		ByteArray keyArray(pubKeys.at(i));
+		cout << left << setw(50) << formatting.str() << "At " << setw(20) << timeStr;		
+
+		ByteArray sigArray(signaturesShow.at(i));
+		ByteArray keyArray(pubKeysShow.at(i));
 		RSAPublicKey rsaPubKey(keyArray);
 
 
-		if(approvals.at(i) == "1"){
-			cout << setw(40) <<"The signer approved the document";
+		if(approvalsShow.at(i) == "1"){
+			cout << setw(39) <<"The signer approved the document";
 		}
-		else if(approvals.at(i) == "0"){
-			cout << setw(40) << "The signer disapproved the document";
+		else if(approvalsShow.at(i) == "0"){
+			cout << setw(39) << "The signer disapproved the document";
 		}
 
 		Signer verification;
