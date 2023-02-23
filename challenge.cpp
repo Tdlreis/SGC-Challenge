@@ -27,82 +27,6 @@ SymmetricKey sysKey = SymmetricKey(sysKeyBa, SymmetricKey::AES_256);
 
 
 //Utility Functions
-ByteArray encryptData(ByteArray data)
-{	
-	OpenSSL_add_all_algorithms();
-
-	Base64 converter;
-	data = ByteArray(converter.encode(data));
-	ofstream debugFile(string("./documents/inprocess/e.txt").c_str());
-	debugFile << data.toString() << endl;
-	
-
-    unsigned char key[EVP_MAX_KEY_LENGTH], iv[EVP_MAX_IV_LENGTH];
-    EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha256(), NULL, reinterpret_cast<const unsigned char*>(sysKey.getEncoded().toString().c_str()), sysKey.getEncoded().toString().size(), 1, key, iv);
-
-
-    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
-    EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv);
-
-    int out_len = data.toString().size();
-    unsigned char outbuf[out_len];
-    EVP_EncryptUpdate(ctx, outbuf, &out_len, reinterpret_cast<const unsigned char*>(data.toString().c_str()), data.toString().size());
-	ostringstream out;
-    out.write(reinterpret_cast<const char*>(outbuf), out_len);
-
-    // Step 7: Finalize encryption and write any remaining data
-    EVP_EncryptFinal_ex(ctx, outbuf, &out_len);
-    out.write(reinterpret_cast<const char*>(outbuf), out_len);
-
-    // Step 8: Clean up
-    EVP_CIPHER_CTX_free(ctx);
-
-	debugFile << out.str() << endl;
-
-
-	ByteArray outArray((const unsigned char *)out.str().c_str(), out.str().size()+3);
-	debugFile << outArray.toString() << endl;
-	debugFile.close();
-
-	return outArray;
-}
-
-ByteArray decryptData(ByteArray data) {
-	ofstream debugFile(string("./documents/inprocess/d.txt").c_str());
-	debugFile << data.toString() << endl;
-
-    unsigned char key[EVP_MAX_KEY_LENGTH], iv[EVP_MAX_IV_LENGTH];
-	EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha256(), NULL, reinterpret_cast<const unsigned char*>(sysKey.getEncoded().toString().c_str()), sysKey.getEncoded().toString().size(), 1, key, iv);
-
-    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
-    EVP_CIPHER_CTX_init(ctx);
-    EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv);
-
-
-    unsigned char out_buf[data.toString().size() + EVP_MAX_BLOCK_LENGTH];
-    int out_len;
-    
-    if (!EVP_DecryptUpdate(ctx, out_buf, &out_len, reinterpret_cast<const unsigned char*>(data.toString().c_str()),  data.toString().size())) {
-        EVP_CIPHER_CTX_cleanup(ctx);
-        throw runtime_error("Error Decrypting");
-    }
-	ostringstream out;
-	out.write(reinterpret_cast<const char*>(out_buf), out_len);
-
-
-    if (EVP_DecryptFinal_ex(ctx, out_buf, &out_len)) {
-    	out.write(reinterpret_cast<const char*>(out_buf), out_len);
-    }
-
-    EVP_CIPHER_CTX_cleanup(ctx);
-
-	
-	debugFile << out.str();
-	debugFile.close();
-
-	return ByteArray(&out);
-}
-
 string getFileName(string path){
 	int pos = path.find_last_of("/");
 	string fileName = path.substr(pos+1);
@@ -111,7 +35,7 @@ string getFileName(string path){
 	return fileName;
 }
 
-ByteArray fileReader(string path){
+ByteArray fileReader(string path){	
 	ifstream file(path.c_str(), ios::binary);
 	if(!file){
 		throw runtime_error("File not found");
@@ -136,10 +60,6 @@ ByteArray fileReader(string path){
 void creatingMemoryFile(ByteArray out, string name){
 	MessageDigest::loadMessageDigestAlgorithms();
 	SymmetricCipher::loadSymmetricCiphersAlgorithms();
-
-	ofstream debugFile(string("./documents/inprocess/" + name + ".txt").c_str());
-	debugFile << out.toString();
-	debugFile.close();
 
     unsigned char key[EVP_MAX_KEY_LENGTH], iv[EVP_MAX_IV_LENGTH];
     EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha256(), NULL, reinterpret_cast<const unsigned char*>(sysKey.getEncoded().toString().c_str()), sysKey.getEncoded().toString().size(), 1, key, iv);
@@ -200,9 +120,6 @@ ByteArray openMemoryFile(string name, int place){
     fileData << file.rdbuf();
 	file.close();
 
-	ofstream debugFile(string("./documents/inprocess/d.txt").c_str());
-	debugFile << fileData.str() << endl;
-
     unsigned char key[EVP_MAX_KEY_LENGTH], iv[EVP_MAX_IV_LENGTH];
 	EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha256(), NULL, reinterpret_cast<const unsigned char*>(sysKey.getEncoded().toString().c_str()), sysKey.getEncoded().toString().size(), 1, key, iv);
 
@@ -227,10 +144,6 @@ ByteArray openMemoryFile(string name, int place){
     }
 
     EVP_CIPHER_CTX_cleanup(ctx);
-
-	
-	debugFile << out.str();
-	debugFile.close();
 
 	return ByteArray(&out);
 }
@@ -377,12 +290,12 @@ void includeDocument(){
 
 	ByteArray hash = hashCreator.doFinal(pdf);
 
-	fileBuilder << "Hash:" << endl << hash.toString() << endl;
+	// fileBuilder << "Hash:" << endl << hash.toString() << endl;
 
 	vector<string> names;
 	pair<vector<string>, vector<int> > titleCount;
 	int freeSigners = 0;
-	bool approval  = false;
+	int approval  = 0;
 
 
 	while (true)
@@ -604,7 +517,7 @@ void includeDocument(){
 					while (true)
 					{
 						cout << "Type ESC to quit" << endl;
-						cout << numberFree << " signature spaces are free for anyone to sign(y or n)? ";
+						cout << numberFree << " signature spaces are free for anyone to sign (y or n)? ";
 						getline(cin, in);
 						if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
 							break;
@@ -654,22 +567,42 @@ void includeDocument(){
 				getline(cin, in);
 				if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
 					while(true){
+						int sigNum = names.size() + freeSigners;
+						for (size_t i = 0; i < titleCount.second.size(); i++)
+						{
+							sigNum += titleCount.second.at(i);
+						}
+						system("clear");
 						cout << "Type ESC to quit" << endl;
-						cout << "This document needs approval or only signatures: " << endl << "1-Approval" << endl << "2-Signatures" << endl << "-> ";
+						cout << "How many of the signers have to agree with the document for it to be validated?" << endl << "Type a number between 0 and " << sigNum << endl << "If the number is 0 the document will need a signature, but wont ask for approval" << endl << "->";
+
 						getline(cin, in);
 						if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
 							break;
 						}
-						if(in == "1"){
-							approval = true;
-							break;
-						}  
-						else if(in == "2"){
-							approval = false;
-							break;
+						istringstream converter(in);
+						converter >> approval;
+
+						if(converter.fail()){
+							cout << "Not a number" << endl;			
+						}
+						else if(approval < 0 || approval > sigNum){
+							cout << "Please type a number between 0 and " << sigNum << endl;
+							approval = 0;
 						}
 						else{
-							cout << "Not a option, please chose a number" << endl;
+							cout << approval << " people need to approve the document (y or n)?";
+							getline(cin, in);
+							if(lowerCase(in) == "n" || lowerCase(in) == "no" || in.find(27) != string::npos){
+								continue;
+							}
+							else if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
+								break;
+							}
+							else{
+								cout << "Not an option, please chose a number" << endl << "Press enter to continue" << endl;
+								getline(cin, in);
+							}
 						}
 					}
 					break;
@@ -679,6 +612,7 @@ void includeDocument(){
 				}
 				else{
 					cout << "Not an option (y or n)" << endl;
+				
 				}
 			}
 			if (lowerCase(in) == "y" || lowerCase(in) == "yes" || in == "1" || in == "2")
@@ -772,7 +706,7 @@ void signDocument(){
 		vector<string> names, signatures;
 		pair<vector<string>, vector<int> > titleCount;
 		int posStart, posTerm, posSeparator, posEnd, number, freeSigners;
-		bool approval = false;
+		int approval;
 
 		posTerm = fileBuilder.str().find("nameSigners:");
 		posSeparator = fileBuilder.str().find(":", posTerm+1);
@@ -811,8 +745,7 @@ void signDocument(){
 		posTerm = fileBuilder.str().find("needApproval:");
 		posSeparator = fileBuilder.str().find(":", posTerm+1);
 		posEnd = fileBuilder.str().find("\n", posSeparator);
-		number = atoi(fileBuilder.str().substr(posSeparator+1, posEnd-posSeparator-1).c_str());
-		approval = (number != 0);
+		approval = atoi(fileBuilder.str().substr(posSeparator+1, posEnd-posSeparator-1).c_str());
 
 		posTerm = fileBuilder.str().find("signatures:");
 		posSeparator = fileBuilder.str().find(":", posTerm+1);
@@ -912,7 +845,7 @@ void signDocument(){
 						getline(cin, in);
 						break;
 					}
-					if(approval){
+					if(approval > 0){
 						while (true)
 						{
 							cout << "Type ESC to quit" << endl;
@@ -1257,7 +1190,12 @@ void verify(){
 	vector<string> names, titles, approvals, signatures, pubKeys;
 	vector<time_t> dates;
 
-	int posStart, posTerm, posSeparator, posEnd, number;
+	int posStart, posTerm, posSeparator, posEnd, number, approval, approvalCount = 0;
+
+	posTerm = fileBuilder.str().find("needApproval:");
+	posSeparator = fileBuilder.str().find(":", posTerm+1);
+	posEnd = fileBuilder.str().find("\n", posSeparator);
+	approval = atoi(fileBuilder.str().substr(posSeparator+1, posEnd-posSeparator-1).c_str());
 
 	posTerm = fileBuilder.str().find("signatures:");
 	posSeparator = fileBuilder.str().find(":", posTerm+1);
@@ -1330,10 +1268,12 @@ void verify(){
 
 		if(approvalsShow.at(i) == "1"){
 			cout << setw(39) <<"The signer approved the document";
+			approvalCount++;
 		}
 		else if(approvalsShow.at(i) == "0"){
-			cout << setw(39) << "The signer disapproved the document";
+			cout << setw(39) << "The signer denied the document";
 		}
+		
 
 		Signer verification;
 		cout << "Signature: ";
@@ -1344,6 +1284,16 @@ void verify(){
 			cout << "Invalid" << endl;
 		}		
 	}
+
+	if(approval > 0){
+		if(approvalCount >= approval){
+			cout << endl << "\033[32m" << "Document Approved" << "\033[0m" << endl; 
+		}
+		else{
+			cout << endl << "\033[31m" << "Document Denied" << "\033[0m" << endl;
+		}
+	}
+
 	cout << endl << "Press enter to leave!" << endl;
 	getline(cin, in);
 }
@@ -1376,10 +1326,7 @@ int main(int argc, char **argv) {
 		cout << "4-Verify Document" << endl;
 		cout << "Type function number ->";
 		string in;
-		cin >> in;
-
-		cin.ignore();
-
+		getline(cin, in);
 
 		if(in == "1"){
 			createKeysAndCertificate();
