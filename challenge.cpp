@@ -268,30 +268,25 @@ void createKeysAndCertificate(){
 
 	string in = "";
 
-	cout << "Certificate Creation: " << endl;
-	cout << "Country (Two Letters): ";
-	getline(cin, in);
-	
 	RDNSequence rdnSubject;
-	rdnSubject.addEntry(RDNSequence::COUNTRY, in);
-	in.clear();
-	cout << "State: ";
-	getline(cin, in);
-	rdnSubject.addEntry(RDNSequence::STATE_OR_PROVINCE, in);
-	in.clear();
-	cout << "Email: ";
-	getline(cin, in);
-	rdnSubject.addEntry(RDNSequence::EMAIL, in);
-	in.clear();
-	cout << "Title: ";
-	getline(cin, in);
-	rdnSubject.addEntry(RDNSequence::TITLE, in);
-	in.clear();
+	cout << "Type ESC to quit" << endl;
+	cout << "Certificate Creation: " << endl;
 	cout << "Full Name: ";
 	getline(cin, in);
+	if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+		return;
+	}
 	string name = in;
 	in.clear();
 	rdnSubject.addEntry(RDNSequence::COMMON_NAME, name);
+	cout << "Title: ";
+	getline(cin, in);
+	if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+		return;
+	}
+
+	rdnSubject.addEntry(RDNSequence::TITLE, in);
+	in.clear();	
 
 	certBuilder.setSubject(rdnSubject);
 	certBuilder.setPublicKey(*pubKey);
@@ -325,7 +320,10 @@ void createKeysAndCertificate(){
 	pkcs12Builder.addAdditionalCert(cert);
 
 	cout << "Password: ";
-	cin >> in;
+	getline(cin, in);
+	if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+		return;
+	}
 	
 	Pkcs12 *pkcs12 = pkcs12Builder.doFinal(in);
 	in.clear();
@@ -338,13 +336,15 @@ void createKeysAndCertificate(){
 	}
 	pkcs12_file.close();
 
+	cout << "Certificate created" << endl << "Press enter to continue" << endl;
+	getline(cin, in);
+
 
 	delete (cert);
 	delete (pubKey);
 	delete (privKey);
 	delete (pkcs12);
 }
-
 
 void includeDocument(){
 	string in, path;
