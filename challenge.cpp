@@ -422,9 +422,13 @@ void includeDocument(){
 		if (in == "1")
 		{
 			while (true)
-			{
+			{	
+				cout << "Type ESC to quit" << endl;
 				cout << "Full Name: ";
 				getline(cin, in);
+				if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+					break;
+				}
 				if(!in.empty()){
 					string name = in;
 					if(find(names.begin(), names.end(), name) != names.end() && !names.empty()){
@@ -434,15 +438,23 @@ void includeDocument(){
 					else{
 						while (true)
 						{
+							cout << "Type ESC to quit" << endl;
 							cout << "You typed: " << name << endl << "Are you sure (y or n)? ";
 							getline(cin, in);
+							if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+								break;
+							}
 							if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
 								names.push_back(name);
 								break;
 							}
 							else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
+								cout << "Type ESC to quit" << endl;
 								cout << "Type the correct name: ";
 								getline(cin, name);
+								if(lowerCase(name) == "esc" || lowerCase(name) == "quit" || name.find(27) != string::npos){
+									break;
+								}
 								if(find(names.begin(), names.end(), name) != names.end() && !names.empty()){
 									cout << "Name already on the list" << endl << "Press enter to continue" << endl;
 									getline(cin, in);
@@ -464,19 +476,31 @@ void includeDocument(){
 		else if(in == "2"){
 			while (true)
 			{
+				cout << "Type ESC to quit" << endl;
 				cout << "Job Title: ";
 				getline(cin, in);
+				if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+					break;
+				}
 				if(!in.empty()){
 					string title = in;
 					while (true)
 					{
+						cout << "Type ESC to quit" << endl;
 						cout << "You typed: " << title << endl << "Are you sure (y or n)? ";
 						getline(cin, in);
+						if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+							break;
+						}
 						if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
 							while (true)
 							{
+								cout << "Type ESC to quit" << endl;
 								cout << "How many of this title has to sign de document?" << endl << "-> ";
 								getline(cin, in);
+								if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+									break;
+								}
 
 								istringstream converter(in);
 								int number;
@@ -491,18 +515,28 @@ void includeDocument(){
 								else{
 									while (true)
 									{
+										cout << "Type ESC to quit" << endl;
 										cout << number << " " << title << " are needed to sign this document (y or n)? ";
 										getline(cin, in);
+										if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+											break;
+										}
 										if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
 											titleCount.first.push_back(title);
 											titleCount.second.push_back(number);
 											break;
 										}
 										else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
+											bool exit = false;
 											while (true)
 											{
+												cout << "Type ESC to quit" << endl;
 												cout << "Type the correct quantity: ";
 												getline(cin, in);
+												if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+													exit = true;
+													break;
+												}
 												istringstream converterCorrection(in);
 												int correctNumber;
 												converterCorrection >> correctNumber;					
@@ -512,7 +546,10 @@ void includeDocument(){
 												else{
 													number = correctNumber;
 													break;
-												}											
+												}	
+											}
+											if(exit){
+												break;										
 											}											
 										}
 										else{
@@ -525,8 +562,12 @@ void includeDocument(){
 							break;												
 						}
 						else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
+							cout << "Type ESC to quit" << endl;
 							cout << "Type the correct job title: ";
 							getline(cin, title);
+							if(lowerCase(title) == "esc" || lowerCase(title) == "quit" || title.find(27) != string::npos){
+								break;
+							}
 						}
 						else{
 							cout << "Not an Option. The job title is correct (y or n)?" << endl;
@@ -542,8 +583,12 @@ void includeDocument(){
 		else if(in == "3"){			
 			while (true)
 			{
+				cout << "Type ESC to quit" << endl;
 				cout << "How many signature spaces could have anyone's signature?" << endl << "-> ";
 				getline(cin, in);
+				if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+					break;
+				}
 
 				istringstream converterFree(in);
 				int numberFree;
@@ -558,17 +603,27 @@ void includeDocument(){
 				else{
 					while (true)
 					{
+						cout << "Type ESC to quit" << endl;
 						cout << numberFree << " signature spaces are free for anyone to sign(y or n)? ";
 						getline(cin, in);
+						if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+							break;
+						}
 						if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
 							freeSigners += numberFree;
 							break;
 						}
 						else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
+							bool exit = false;
 							while (true)
 							{
+								cout << "Type ESC to quit" << endl;
 								cout << "Type the correct quantity: ";
 								getline(cin, in);
+								if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+									exit = true;
+									break;
+								}
 								istringstream freeCorrection(in);
 								int freeCorrectNumber;
 								freeCorrection >> freeCorrectNumber;					
@@ -579,7 +634,10 @@ void includeDocument(){
 									numberFree = freeCorrectNumber;
 									break;
 								}											
-							}											
+							}	
+							if(exit){
+								break;
+							}										
 						}
 						else{
 							cout << "Not an Option. The name is correct (y or n)?" << endl;
@@ -596,8 +654,12 @@ void includeDocument(){
 				getline(cin, in);
 				if(lowerCase(in) == "y" || lowerCase(in) == "yes"){
 					while(true){
+						cout << "Type ESC to quit" << endl;
 						cout << "This document needs approval or only signatures: " << endl << "1-Approval" << endl << "2-Signatures" << endl << "-> ";
 						getline(cin, in);
+						if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+							break;
+						}
 						if(in == "1"){
 							approval = true;
 							break;
@@ -612,7 +674,7 @@ void includeDocument(){
 					}
 					break;
 				}
-				else if(lowerCase(in) == "n" || lowerCase(in) == "no"){
+				else if(lowerCase(in) == "n" || lowerCase(in) == "no" || in.find(27) != string::npos){
 					break;
 				}
 				else{
@@ -621,6 +683,9 @@ void includeDocument(){
 			}
 			if (lowerCase(in) == "y" || lowerCase(in) == "yes" || in == "1" || in == "2")
 			{
+				if(names.empty() && titleCount.first.empty() && freeSigners < 0){
+					return;
+				}
 				break;
 			}
 		}
@@ -816,6 +881,9 @@ void signDocument(){
 			{
 				cout << "Signer password: ";
 				getline(cin, in);
+				if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
+					break;
+				}
 				Signer signatureCretor;
 				try{
 					signature = signatureCretor.sign(*p12.getPrivKey(in), hash, MessageDigest::SHA256);
@@ -856,7 +924,7 @@ void signDocument(){
 							if(lowerCase(in) == "esc" || lowerCase(in) == "quit" || in.find(27) != string::npos){
 								cout << "Ok, think about it and come back" << endl << "Your signature was not finalized" << endl << "Press enter to continue" << endl;
 								getline(cin, in);
-								return;
+								break;;
 							}
 							if (in == "1")
 							{
@@ -1113,9 +1181,9 @@ void signDocument(){
 					}
 					break;
 				}
-				catch(Pkcs12Exception){
+				catch(Pkcs12Exception){					
 					cout << "Incorrect Password" << endl << "Press enter to continue" << endl;
-					getline(cin, in);					
+					getline(cin, in);										
 				}		
 			}
 			
@@ -1277,8 +1345,7 @@ void verify(){
 		}		
 	}
 	cout << endl << "Press enter to leave!" << endl;
-	string teste;
-	getline(cin, teste);
+	getline(cin, in);
 }
 
 int main(int argc, char **argv) {
