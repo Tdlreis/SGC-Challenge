@@ -15,11 +15,9 @@
 #include <libcryptosec/Signer.h>
 #include <libcryptosec/SymmetricKey.h>
 
-#include <libcryptosec/Base64.h>
-
 #include <sys/stat.h>
 
-#include <openssl/evp.h>
+// #include <openssl/evp.h>
 
 string sysKeyString = "q3t6w9z$C&F)J@NcQfTjWnZr4u7x!A%D";
 ByteArray sysKeyBa(sysKeyString);
