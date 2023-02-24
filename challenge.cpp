@@ -688,7 +688,8 @@ void includeDocument(){
 						}
 						// If input less then zero or bigger then the number of registered signers, ask for a valid number
 						else if(approval < 0 || approval > sigNum){
-							cout << "Please type a number between 0 and " << sigNum << endl;
+							cout << "Please type a number between 0 and " << sigNum << endl << "Press enter to continue" << endl;
+							getline(cin, in);
 							approval = 0;
 						}
 						else{
